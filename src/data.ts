@@ -6,7 +6,7 @@
 // with a source. Real apps combine a few mechanics; we surface four:
 //   - auto     recurring UPI autopay / mandate (e.g. ₹500 every Friday)
 //   - roundup  spare change rounded up from everyday spends
-//   - skip     the Swiggy-native hook: skipped a food order, stashed the cash
+//   - skip     the "Skip-to-Save" hook: skipped a food order, stashed the cash
 //   - boost    a one-off manual top-up
 // A goal's `saved` is just the sum of its contributions, so progress, savings
 // rate, streaks and the projected finish date are all derived, not stored.
@@ -32,44 +32,37 @@ export type Goal = {
   weeklyAutoSave: number;
   streakWeeks: number;
   deadline: string;
-  gradient: [string, string];
-  glow: string;
-  squad: string[]; // avatar emoji of friends saving toward the same goal
+  squad: string[]; // avatar image paths of friends saving toward the same goal
   contributions: Contribution[];
 };
 
 export type Friend = {
   id: string;
   name: string;
-  avatar: string;
+  avatar: string; // image path
+  avatarBg: string;
   goal: string;
   progress: number; // 0..1
-  color: string;
 };
 
-export const SOURCE_META: Record<
-  ContributionSource,
-  { icon: string; tint: string }
-> = {
-  auto: { icon: "🔁", tint: "#6C5CE7" },
-  roundup: { icon: "🪙", tint: "#22D3EE" },
-  skip: { icon: "🍜", tint: "#FF7A2F" },
-  boost: { icon: "⚡", tint: "#B8FF3C" },
+export const SOURCE_META: Record<ContributionSource, { icon: string }> = {
+  auto: { icon: "🔁" },
+  roundup: { icon: "🪙" },
+  skip: { icon: "🍜" },
+  boost: { icon: "⚡" },
 };
 
 export const GOALS: Goal[] = [
   {
     id: "goa",
-    name: "Goa Trip",
-    emoji: "🏝️",
+    name: "Goa trip",
+    emoji: "🏖️",
     target: 80000,
     saved: 61200,
     weeklyAutoSave: 2500,
     streakWeeks: 12,
     deadline: "Dec 2026",
-    gradient: ["#FF8A3D", "#FF3D77"],
-    glow: "rgba(255,90,120,0.55)",
-    squad: ["🦊", "🐼", "🐨"],
+    squad: ["/avatars/arthur.png", "/avatars/wei.png", "/avatars/natalia.png"],
     contributions: [
       { id: "g1", source: "skip", label: "Cooked instead of ordering", amount: 320, daysAgo: 0 },
       { id: "g2", source: "roundup", label: "Round-ups · 9 spends", amount: 148, daysAgo: 1 },
@@ -80,16 +73,14 @@ export const GOALS: Goal[] = [
   },
   {
     id: "iphone",
-    name: "iPhone 17 Pro",
+    name: "iPhone 17 pro",
     emoji: "📱",
     target: 134900,
     saved: 42800,
     weeklyAutoSave: 3000,
-    streakWeeks: 7,
+    streakWeeks: 8,
     deadline: "Mar 2027",
-    gradient: ["#6C5CE7", "#22D3EE"],
-    glow: "rgba(108,92,231,0.55)",
-    squad: ["🐯"],
+    squad: ["/avatars/wei.png"],
     contributions: [
       { id: "i1", source: "auto", label: "Friday auto-stash", amount: 3000, daysAgo: 2 },
       { id: "i2", source: "roundup", label: "Round-ups · 14 spends", amount: 232, daysAgo: 2 },
@@ -98,15 +89,13 @@ export const GOALS: Goal[] = [
   },
   {
     id: "emergency",
-    name: "Rainy Day Fund",
+    name: "Rainy day fund",
     emoji: "🛟",
     target: 50000,
     saved: 47500,
     weeklyAutoSave: 1500,
     streakWeeks: 21,
     deadline: "Ongoing",
-    gradient: ["#14E8A0", "#0BA5EC"],
-    glow: "rgba(20,232,160,0.5)",
     squad: [],
     contributions: [
       { id: "e1", source: "auto", label: "Weekly safety net", amount: 1500, daysAgo: 1 },
@@ -117,17 +106,17 @@ export const GOALS: Goal[] = [
 ];
 
 export const FRIENDS: Friend[] = [
-  { id: "aarav", name: "Aarav", avatar: "🦊", goal: "Goa Trip", progress: 0.82, color: "#FF8A3D" },
-  { id: "diya", name: "Diya", avatar: "🐼", goal: "MacBook Air", progress: 0.54, color: "#6C5CE7" },
-  { id: "kabir", name: "Kabir", avatar: "🐨", goal: "Goa Trip", progress: 0.4, color: "#22D3EE" },
+  { id: "aarav", name: "Aarav", avatar: "/avatars/arthur.png", avatarBg: "#c0d5ff", goal: "Goa trip", progress: 0.9 },
+  { id: "diya", name: "Diya", avatar: "/avatars/natalia.png", avatarBg: "#c0eaff", goal: "MacBook Air", progress: 0.54 },
+  { id: "kabir", name: "Kabir", avatar: "/avatars/wei.png", avatarBg: "#e1e4ea", goal: "Goa trip", progress: 0.4 },
 ];
 
-// XP model: every ₹ saved is 1 XP. A level is 25k XP. Simple, legible, and it
+// XP model: every ₹ saved is 1 XP. A level is 20k XP. Simple, legible, and it
 // means completing a goal always visibly moves the level bar.
-export const XP_PER_LEVEL = 25000;
+export const XP_PER_LEVEL = 20000;
 
 export function levelFromXp(xp: number) {
-  const level = Math.floor(xp / XP_PER_LEVEL) + 1;
+  const level = Math.floor(xp / XP_PER_LEVEL);
   const into = xp % XP_PER_LEVEL;
   return { level, into, toNext: XP_PER_LEVEL, pct: into / XP_PER_LEVEL };
 }

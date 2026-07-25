@@ -1,16 +1,19 @@
 @import "tailwindcss";
 
 @theme {
-  --font-display: "Space Grotesk", system-ui, sans-serif;
-  --font-sans: "Inter", system-ui, sans-serif;
+  --font-display: "Geist", system-ui, sans-serif;
+  --font-sans: "Geist", system-ui, sans-serif;
 
-  --color-ink: #f6f5fb;
-  --color-ink-dim: rgba(246, 245, 251, 0.62);
-  --color-ink-faint: rgba(246, 245, 251, 0.38);
-  --color-canvas: #08070d;
-  --color-panel: #121019;
-  --color-xp: #b8ff3c;
-  --color-swiggy: #ff7a2f;
+  /* Flat dark system lifted from the Figma (R-R-2.0 → Quest dashboard) */
+  --color-ink: #ffffff;
+  --color-ink-dim: #8d8c8f;
+  --color-ink-faint: rgba(255, 255, 255, 0.38);
+  --color-canvas: #000000;
+  --color-card: #1c1c1e;
+  --color-elev: #3b3b3f;
+  --color-track: #404040;
+  --color-lime: #b8fe50;
+  --color-lime-dim: #666666; /* secondary text on the lime surface */
 }
 
 :root {
@@ -31,12 +34,10 @@ body,
 
 body {
   font-family: var(--font-sans);
-  /* ambient stage behind the phone */
+  /* quiet stage behind the phone — a whisper of lime, nothing loud */
   background:
-    radial-gradient(1100px 700px at 18% -5%, rgba(108, 92, 231, 0.22), transparent 60%),
-    radial-gradient(900px 650px at 88% 8%, rgba(255, 122, 47, 0.16), transparent 55%),
-    radial-gradient(1000px 800px at 50% 115%, rgba(20, 232, 160, 0.12), transparent 55%),
-    #060509;
+    radial-gradient(900px 600px at 50% -10%, rgba(184, 254, 80, 0.06), transparent 60%),
+    #060606;
   color: var(--color-ink);
 }
 
@@ -52,8 +53,4 @@ body {
 }
 .phone-scroll::-webkit-scrollbar {
   display: none;
-}
-
-.noise {
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
 }

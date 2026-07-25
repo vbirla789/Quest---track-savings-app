@@ -7,7 +7,7 @@ export default function PhoneFrame({ children }: { children: ReactNode }) {
       {/* soft ground glow */}
       <div
         className="absolute -inset-10 -z-10 rounded-[80px] blur-3xl"
-        style={{ background: "radial-gradient(circle, rgba(108,92,231,0.25), transparent 70%)" }}
+        style={{ background: "radial-gradient(circle, rgba(184,254,80,0.12), transparent 70%)" }}
       />
       <div className="relative h-[844px] w-[390px] rounded-[54px] bg-[#1a1a1f] p-[5px] shadow-[0_40px_120px_-20px_rgba(0,0,0,0.8),0_0_0_1px_rgba(255,255,255,0.06)_inset]">
         <div className="relative h-full w-full overflow-hidden rounded-[49px] bg-canvas">

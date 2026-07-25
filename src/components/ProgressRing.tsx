@@ -8,6 +8,7 @@ export default function ProgressRing({
   stroke = 14,
   from,
   to,
+  track = "rgba(255,255,255,0.08)",
   children,
   glow,
 }: {
@@ -16,6 +17,7 @@ export default function ProgressRing({
   stroke?: number;
   from: string;
   to: string;
+  track?: string;
   glow?: string;
   children?: ReactNode;
 }) {
@@ -37,7 +39,7 @@ export default function ProgressRing({
           cy={size / 2}
           r={r}
           fill="none"
-          stroke="rgba(255,255,255,0.08)"
+          stroke={track}
           strokeWidth={stroke}
         />
         <motion.circle

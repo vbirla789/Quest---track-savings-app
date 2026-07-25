@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useMemo } from "react";
 
-const COLORS = ["#B8FF3C", "#FF7A2F", "#6C5CE7", "#22D3EE", "#FF3D77", "#14E8A0"];
+const COLORS = ["#B8FE50", "#FFFFFF", "#8FDD2E", "#E1E4EA", "#B8FE50", "#6BBF1F"];
 
 /** A one-shot confetti burst that rains from the top of the container. */
 export default function Confetti({ count = 90 }: { count?: number }) {
