@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Space Grotesk", system-ui, sans-serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+
+  --color-ink: #f6f5fb;
+  --color-ink-dim: rgba(246, 245, 251, 0.62);
+  --color-ink-faint: rgba(246, 245, 251, 0.38);
+  --color-canvas: #08070d;
+  --color-panel: #121019;
+  --color-xp: #b8ff3c;
+  --color-swiggy: #ff7a2f;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100svh;
+}
+
+body {
+  font-family: var(--font-sans);
+  /* ambient stage behind the phone */
+  background:
+    radial-gradient(1100px 700px at 18% -5%, rgba(108, 92, 231, 0.22), transparent 60%),
+    radial-gradient(900px 650px at 88% 8%, rgba(255, 122, 47, 0.16), transparent 55%),
+    radial-gradient(1000px 800px at 50% 115%, rgba(20, 232, 160, 0.12), transparent 55%),
+    #060509;
+  color: var(--color-ink);
+}
+
+/* Tabular figures for money so digits don't jitter while counting up */
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Thin, unobtrusive scrollbar inside the phone */
+.phone-scroll {
+  scrollbar-width: none;
+}
+.phone-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.noise {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}
