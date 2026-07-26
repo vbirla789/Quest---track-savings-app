@@ -1,3 +1,5 @@
+import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
 import { weeksToGoal, type ContributionSource, type Goal } from "../data";
 import { inrPlain } from "../lib/format";
 import { useCountUp } from "../lib/useCountUp";
@@ -26,16 +28,33 @@ export default function GoalDetails({
   onBack,
   onStashMoney,
   onNudgeSquad,
+  onEdit,
+  onDelete,
 }: {
   goal: Goal;
   onBack: () => void;
   onStashMoney: () => void;
   onNudgeSquad: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
 }) {
   const p = Math.min(1, goal.saved / goal.target);
   const animatedSaved = useCountUp(goal.saved);
   const weeksLeft = weeksToGoal(goal);
   const remaining = Math.max(0, goal.target - goal.saved);
+
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // dismiss the overflow menu on any outside tap
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (!menuRef.current?.contains(e.target as Node)) setMenuOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [menuOpen]);
 
   return (
     <div className="relative h-full overflow-hidden bg-canvas">
@@ -53,12 +72,45 @@ export default function GoalDetails({
             <SysIcon src="/icons/chevron-left.svg" inset="21.88% 38.54% 21.88% 30.21%" box={20} />
           </button>
           <span className="text-[18px] font-semibold leading-[1.3]">{goal.name}</span>
-          <button
-            aria-label="More options"
-            className="surface-card grid size-10 place-items-center rounded-full active:scale-95"
-          >
-            <SysIcon src="/icons/three-dot.svg" inset="43.75% 18.75%" box={20} />
-          </button>
+          <div ref={menuRef} className="relative">
+            <button
+              onClick={() => setMenuOpen((o) => !o)}
+              aria-label="More options"
+              className="surface-card grid size-10 place-items-center rounded-full active:scale-95"
+            >
+              <SysIcon src="/icons/three-dot.svg" inset="43.75% 18.75%" box={20} />
+            </button>
+            <AnimatePresence>
+              {menuOpen && (
+                <motion.div
+                  className="surface-card absolute right-0 top-[46px] z-50 w-[168px] overflow-hidden rounded-[16px] p-1"
+                  initial={{ opacity: 0, scale: 0.94, y: -6 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.94, y: -6 }}
+                  transition={{ type: "spring", stiffness: 340, damping: 26 }}
+                >
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onEdit();
+                    }}
+                    className="flex w-full items-center gap-2.5 rounded-[12px] px-3 py-2.5 text-left text-[14px] font-medium text-ink active:bg-white/8"
+                  >
+                    ✏️ Edit quest
+                  </button>
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onDelete();
+                    }}
+                    className="flex w-full items-center gap-2.5 rounded-[12px] px-3 py-2.5 text-left text-[14px] font-medium text-[#ff5a5a] active:bg-white/8"
+                  >
+                    🗑️ Delete quest
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
 
         {/* progress ring */}
@@ -82,17 +134,22 @@ export default function GoalDetails({
           {/* stat trio — icons are global, identical across every goal */}
           <div className="flex items-start gap-3">
             <Stat
-              icon={<SysIcon src="/icons/calendar.svg" inset="14.37% 10.55% 14.21% 10.94%" />}
+              icon={
+                <SysIcon
+                  src="/icons/calendar-outline.svg"
+                  inset="13.54% 10.75% 15.04% 10.78%"
+                />
+              }
               value={`${goal.streakWeeks} Week`}
               label="Streak"
             />
             <Stat
-              icon={<SysIcon src="/icons/note.svg" inset="19.45% 6.78%" />}
+              icon={<SysIcon src="/icons/note-outline.svg" inset="19.45% 6.78%" />}
               value={`₹${inrPlain(goal.weeklyAutoSave)}/wk`}
               label="Savings"
             />
             <Stat
-              icon={<SysIcon src="/icons/crosshair.svg" inset="9.38%" />}
+              icon={<SysIcon src="/icons/crosshair-outline.svg" inset="9.38%" />}
               value={weeksLeft === Infinity ? "—" : `${weeksLeft} week`}
               label="Finish"
             />
@@ -114,9 +171,11 @@ export default function GoalDetails({
                 </div>
                 <div className="flex flex-col text-[14px]">
                   <p className="font-medium leading-[1.24] text-ink">
-                    {goal.squad.length} friends
+                    {goal.squad.length === 1 ? "1 friend" : `${goal.squad.length} friends`}
                   </p>
-                  <p className="leading-[1.4] text-ink-dim">saving with you</p>
+                  <p className="leading-[1.4] text-ink-dim">
+                    {goal.squad.length === 1 ? "is saving with you" : "are saving with you"}
+                  </p>
                 </div>
               </div>
               <button
@@ -133,6 +192,15 @@ export default function GoalDetails({
         <div className="flex w-full flex-col gap-3">
           <h2 className="text-[18px] font-medium leading-[1.4]">Recent stashes</h2>
           <div className="flex flex-col gap-4">
+            {goal.contributions.length === 0 && (
+              <div className="surface-card flex flex-col items-center gap-1 rounded-[24px] px-4 py-7 text-center">
+                <span className="text-[22px]">🪄</span>
+                <p className="mt-1 text-[14px] font-medium text-ink">No stashes yet</p>
+                <p className="text-[13px] leading-[1.4] text-ink-dim">
+                  Add your first bit of money and watch this quest come alive.
+                </p>
+              </div>
+            )}
             {goal.contributions.map((c) => (
               <div key={c.id} className="surface-card flex items-center justify-between rounded-[24px] p-4">
                 <div className="flex items-center gap-3">
@@ -155,7 +223,8 @@ export default function GoalDetails({
       </div>
 
       {/* sticky footer — single primary CTA over a bottom fade */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40 bg-gradient-to-b from-transparent to-black to-60% px-4 pb-8 pt-3">
+      {/* phone has no faux home bar, so the CTA sits 16px off the edge there */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40 bg-gradient-to-b from-transparent to-black to-60% px-4 pb-4 pt-3 sm:pb-8">
         <button
           onClick={onStashMoney}
           className="pointer-events-auto flex h-12 w-full items-center justify-center gap-2 rounded-full bg-lime text-[16px] font-semibold text-black active:scale-[0.98]"

@@ -1,16 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 
 /* ----------------------------------------------------------------------------
- * Faux iOS input accessories.
+ * Faux iOS input accessories, built from the Figma keyboard frame.
  *
- * A desktop browser never raises a software keyboard, so the sheet flow reads
- * as half a screen. These mirror the keyboard / date picker from the Figma so
- * the prototype demos the same way on a laptop as it would on a phone — and
- * they're real controls, so clicking them actually edits the field.
+ * A desktop browser never raises a software keyboard, and on a phone we
+ * suppress the native one (inputMode="none") so the flow always looks the
+ * same. These are real controls — clicking them edits the field.
  * --------------------------------------------------------------------------*/
 
-const KEY = "grid place-items-center rounded-[6px] bg-[#fdfdfd] text-[#1c1c1e] shadow-[0_1px_0_rgba(0,0,0,0.28)] active:bg-[#d3d6dc] select-none";
-const MOD = "grid place-items-center rounded-[6px] bg-[#adb3bd] text-[#1c1c1e] shadow-[0_1px_0_rgba(0,0,0,0.28)] active:bg-[#9aa1ac] select-none";
+/* Key metrics straight from the Figma: 42px tall, 8px radius, #595959 glyphs
+   on near-white caps, sat on an #e6e9ed deck. */
+const KEY =
+  "grid place-items-center rounded-[8px] bg-white text-[#595959] shadow-[0_1px_0_rgba(0,0,0,0.25)] active:bg-[#d2d5db] select-none";
+const MOD =
+  "grid place-items-center rounded-[8px] bg-[#adb3bd] text-[#111] shadow-[0_1px_0_rgba(0,0,0,0.25)] active:bg-[#9aa1ac] select-none";
 
 const ROWS = ["qwertyuiop", "asdfghjkl", "zxcvbnm"];
 
@@ -27,34 +30,33 @@ export function Keyboard({
   onDone?: () => void;
   doneLabel?: string;
 }) {
-  const [shift, setShift] = useState(true);
+  // iOS opens a fresh field shifted; the Figma frame shows the lowercase deck,
+  // so start unshifted and let the user toggle.
+  const [shift, setShift] = useState(false);
 
   if (variant === "numeric") {
     return (
-      <div className="w-full select-none bg-[#d1d4db] px-1.5 pb-6 pt-2.5">
+      <div className="w-full select-none rounded-t-[25px] bg-[#e6e9ed] px-2 pb-4 pt-3">
         <div className="grid grid-cols-3 gap-1.5">
           {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((n) => (
-            <button key={n} onClick={() => onKey(n)} className={`${KEY} h-[42px] text-[22px]`}>
+            <button key={n} onClick={() => onKey(n)} className={`${KEY} h-[42px] text-[23px]`}>
               {n}
             </button>
           ))}
-          <button
-            onClick={() => onKey("000")}
-            className={`${MOD} h-[42px] text-[18px] font-medium`}
-          >
+          <button onClick={() => onKey("000")} className={`${MOD} h-[42px] text-[19px]`}>
             000
           </button>
-          <button onClick={() => onKey("0")} className={`${KEY} h-[42px] text-[22px]`}>
+          <button onClick={() => onKey("0")} className={`${KEY} h-[42px] text-[23px]`}>
             0
           </button>
-          <button onClick={onBackspace} className={`${MOD} h-[42px] text-[18px]`} aria-label="Delete">
+          <button onClick={onBackspace} className={`${MOD} h-[42px] text-[19px]`} aria-label="Delete">
             ⌫
           </button>
         </div>
         {onDone && (
           <button
             onClick={onDone}
-            className="mt-1.5 h-[42px] w-full rounded-[6px] bg-[#0088ff] text-[17px] font-medium text-white active:bg-[#0072d6]"
+            className="mt-1.5 h-[42px] w-full rounded-[8px] bg-[#0088ff] text-[17px] text-white active:bg-[#0072d6]"
           >
             {doneLabel}
           </button>
@@ -63,56 +65,84 @@ export function Keyboard({
     );
   }
 
+  const cap = (ch: string) => (shift ? ch.toUpperCase() : ch);
+
   return (
-    <div className="w-full select-none bg-[#d1d4db] px-1.5 pb-6 pt-2.5">
-      {ROWS.map((row, i) => (
-        <div
-          key={row}
-          className={`mb-1.5 flex gap-1.5 ${i === 1 ? "px-4" : ""} ${i === 2 ? "items-center" : ""}`}
-        >
-          {i === 2 && (
-            <button
-              onClick={() => setShift((s) => !s)}
-              className={`${MOD} h-[42px] w-[42px] text-[16px] ${shift ? "bg-white" : ""}`}
-              aria-label="Shift"
-            >
-              ⇧
-            </button>
-          )}
-          {row.split("").map((ch) => (
+    <div className="w-full select-none rounded-t-[25px] bg-[#e6e9ed] pb-[9px] pt-[11px]">
+      <div className="flex flex-col gap-[10px] px-2">
+        {/* row 1 */}
+        <div className="flex gap-[6px]">
+          {ROWS[0].split("").map((ch) => (
             <button
               key={ch}
               onClick={() => {
-                onKey(shift ? ch.toUpperCase() : ch);
+                onKey(cap(ch));
                 setShift(false);
               }}
-              className={`${KEY} h-[42px] flex-1 text-[22px]`}
+              className={`${KEY} h-[42px] flex-1 text-[23px]`}
             >
-              {shift ? ch.toUpperCase() : ch}
+              {cap(ch)}
             </button>
           ))}
-          {i === 2 && (
-            <button
-              onClick={onBackspace}
-              className={`${MOD} h-[42px] w-[42px] text-[18px]`}
-              aria-label="Delete"
-            >
-              ⌫
-            </button>
-          )}
         </div>
-      ))}
-      <div className="flex gap-1.5">
-        <button className={`${MOD} h-[42px] w-[80px] text-[15px]`}>123</button>
-        <button onClick={() => onKey(" ")} className={`${KEY} h-[42px] flex-1 text-[14px]`}>
-          space
-        </button>
-        <button
-          onClick={onDone}
-          className="grid h-[42px] w-[80px] place-items-center rounded-[6px] bg-[#0088ff] text-[15px] font-medium text-white active:bg-[#0072d6]"
-        >
-          {doneLabel}
-        </button>
+        {/* row 2 */}
+        <div className="flex gap-[6px] px-[19px]">
+          {ROWS[1].split("").map((ch) => (
+            <button
+              key={ch}
+              onClick={() => {
+                onKey(cap(ch));
+                setShift(false);
+              }}
+              className={`${KEY} h-[42px] flex-1 text-[23px]`}
+            >
+              {cap(ch)}
+            </button>
+          ))}
+        </div>
+        {/* row 3 — shift · keys · delete */}
+        <div className="flex items-center gap-[13px]">
+          <button
+            onClick={() => setShift((s) => !s)}
+            className={`${shift ? KEY : MOD} h-[42px] w-[42px] text-[18px]`}
+            aria-label="Shift"
+          >
+            ⇧
+          </button>
+          <div className="flex flex-1 gap-[6px]">
+            {ROWS[2].split("").map((ch) => (
+              <button
+                key={ch}
+                onClick={() => {
+                  onKey(cap(ch));
+                  setShift(false);
+                }}
+                className={`${KEY} h-[42px] flex-1 text-[23px]`}
+              >
+                {cap(ch)}
+              </button>
+            ))}
+          </div>
+          <button onClick={onBackspace} className={`${MOD} h-[42px] w-[42px] text-[18px]`} aria-label="Delete">
+            ⌫
+          </button>
+        </div>
+        {/* row 4 — ABC · space · return */}
+        <div className="flex gap-[6px]">
+          <button className={`${MOD} h-[42px] w-[85px] text-[17px]`}>ABC</button>
+          <button onClick={() => onKey(" ")} className={`${KEY} h-[42px] flex-1`} aria-label="Space" />
+          <button
+            onClick={onDone}
+            className="grid h-[42px] w-[86px] place-items-center rounded-[8px] bg-[#0088ff] text-[17px] text-white active:bg-[#0072d6]"
+          >
+            {doneLabel}
+          </button>
+        </div>
+      </div>
+      {/* emoji · mic strip */}
+      <div className="flex items-start justify-between pb-[14px] pl-[34px] pr-[36px] pt-[25px]">
+        <img src="/icons/kb-emoji.svg" alt="" className="block size-[25px]" />
+        <img src="/icons/kb-mic.svg" alt="" className="block h-[26px] w-[18px]" />
       </div>
     </div>
   );

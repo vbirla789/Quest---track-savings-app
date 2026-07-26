@@ -119,34 +119,43 @@ function guessEmoji(name: string) {
   return "🎯";
 }
 
+function sixMonthsOut() {
+  const d = new Date();
+  d.setMonth(d.getMonth() + 6);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 export function NewQuestSheet({
+  initial,
   onClose,
-  onCreate,
+  onSubmit,
 }: {
+  /** present when editing an existing quest — the same wizard, prefilled */
+  initial?: { name: string; target: number; targetDate?: string };
   onClose: () => void;
-  onCreate: (input: { name: string; emoji: string; target: number; targetDate: string }) => void;
+  onSubmit: (input: { name: string; emoji: string; target: number; targetDate: string }) => void;
 }) {
+  const isEdit = !!initial;
   const [step, setStep] = useState(0);
-  const [name, setName] = useState("");
-  const [amount, setAmount] = useState("");
+  const [name, setName] = useState(initial?.name ?? "");
+  const [amount, setAmount] = useState(initial ? String(initial.target) : "");
   // seed the wheel six months out so the field reads as filled, like the design
-  const [date, setDate] = useState(() => {
-    const d = new Date();
-    d.setMonth(d.getMonth() + 6);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-  });
+  const [date, setDate] = useState(initial?.targetDate || sixMonthsOut());
 
   const target = Number(amount) || 0;
 
   const steps = [
     {
-      label: "Goal name",
+      label: "Quest name",
       helper: "You can always change this later",
       cta: "Continue",
       valid: name.trim().length > 0,
       field: (
         <input
           autoFocus
+          // the on-screen keyboard below is the only input surface, so keep the
+          // native one from covering it on a real phone
+          inputMode="none"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="eg. Ladakh ride"
@@ -187,7 +196,7 @@ export function NewQuestSheet({
     {
       label: "Target date",
       helper: "Stay on track by adding a target date",
-      cta: "Start quest",
+      cta: isEdit ? "Save changes" : "Start quest",
       valid: date !== "",
       field: (
         <input
@@ -209,7 +218,7 @@ export function NewQuestSheet({
       setStep(step + 1);
       return;
     }
-    onCreate({ name: name.trim(), emoji: guessEmoji(name), target, targetDate: date });
+    onSubmit({ name: name.trim(), emoji: guessEmoji(name), target, targetDate: date });
   }
 
   return (

@@ -8,7 +8,7 @@ import GoalDetails from "./screens/GoalDetails";
 import LevelUp from "./screens/LevelUp";
 
 type View = "dashboard" | "details";
-type SheetKind = "quest" | "stash" | null;
+type SheetKind = "quest" | "edit" | "stash" | null;
 
 /* Shrink the phone to fit small desktop windows while keeping it 1:1 on a
    roomy screen. Outer phone box ≈ 400×854 + a little breathing room. */
@@ -132,6 +132,49 @@ export default function App() {
     setTimeout(() => setToast(null), 2200);
   }
 
+  function saveQuest({
+    name,
+    emoji,
+    target,
+    targetDate,
+  }: {
+    name: string;
+    emoji: string;
+    target: number;
+    targetDate: string;
+  }) {
+    setGoals(
+      goals.map((g) =>
+        g.id === selectedId
+          ? {
+              ...g,
+              name,
+              // keep a hand-picked icon unless the name changed the guess
+              emoji: g.name === name ? g.emoji : emoji,
+              target,
+              targetDate,
+              deadline: new Date(targetDate).toLocaleDateString("en-GB", {
+                month: "short",
+                year: "numeric",
+              }),
+            }
+          : g,
+      ),
+    );
+    setSheet(null);
+    setToast("Quest updated ✅");
+    setTimeout(() => setToast(null), 2200);
+  }
+
+  function deleteQuest() {
+    const gone = goals.find((g) => g.id === selectedId);
+    setGoals(goals.filter((g) => g.id !== selectedId));
+    setView("dashboard");
+    setSelectedId(null);
+    setToast(`Deleted ${gone?.name ?? "quest"}`);
+    setTimeout(() => setToast(null), 2200);
+  }
+
   function stashCash(goalId: string, amount: number) {
     setSheet(null);
     addToGoal(goalId, amount);
@@ -188,6 +231,8 @@ export default function App() {
                 onBack={() => setView("dashboard")}
                 onStashMoney={() => setSheet("stash")}
                 onNudgeSquad={() => nudge("your squad")}
+                onEdit={() => setSheet("edit")}
+                onDelete={deleteQuest}
               />
             </motion.div>
           )}
@@ -196,7 +241,18 @@ export default function App() {
         {/* bottom sheets for the two dashboard CTAs */}
         <AnimatePresence>
           {sheet === "quest" && (
-            <NewQuestSheet onClose={() => setSheet(null)} onCreate={createQuest} />
+            <NewQuestSheet onClose={() => setSheet(null)} onSubmit={createQuest} />
+          )}
+          {sheet === "edit" && selected && (
+            <NewQuestSheet
+              initial={{
+                name: selected.name,
+                target: selected.target,
+                targetDate: selected.targetDate,
+              }}
+              onClose={() => setSheet(null)}
+              onSubmit={saveQuest}
+            />
           )}
           {sheet === "stash" && (
             <StashSheet

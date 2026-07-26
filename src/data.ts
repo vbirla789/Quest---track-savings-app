@@ -32,6 +32,8 @@ export type Goal = {
   weeklyAutoSave: number;
   streakWeeks: number;
   deadline: string;
+  /** ISO yyyy-mm-dd, kept so the edit sheet can prefill the date wheel */
+  targetDate?: string;
   squad: string[]; // avatar image paths of friends saving toward the same goal
   contributions: Contribution[];
 };
