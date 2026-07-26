@@ -96,7 +96,8 @@ export default function GoalDetails({
                     }}
                     className="flex w-full items-center gap-2.5 rounded-[12px] px-3 py-2.5 text-left text-[14px] font-medium text-ink active:bg-white/8"
                   >
-                    ✏️ Edit quest
+                    <SysIcon src="/icons/edit.svg" inset="17.35% 13.54% 17.71% 17.71%" box={20} />
+                    Edit quest
                   </button>
                   <button
                     onClick={() => {
@@ -105,7 +106,8 @@ export default function GoalDetails({
                     }}
                     className="flex w-full items-center gap-2.5 rounded-[12px] px-3 py-2.5 text-left text-[14px] font-medium text-[#ff5a5a] active:bg-white/8"
                   >
-                    🗑️ Delete quest
+                    <SysIcon src="/icons/bin-red.svg" inset="5.21% 13.54% 10.66% 13.54%" box={20} />
+                    Delete quest
                   </button>
                 </motion.div>
               )}
