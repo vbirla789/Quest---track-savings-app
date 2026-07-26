@@ -160,24 +160,24 @@ export default function GoalDetails({
           {/* squad on this goal */}
           {goal.squad.length > 0 && (
             <div className="surface-card flex items-center justify-between rounded-[24px] p-4">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <div className="flex">
                   {goal.squad.map((src, i) => (
                     <div
                       key={i}
-                      className="-mr-3 size-8 overflow-hidden rounded-full bg-[#e1e4ea] last:mr-0"
+                      className="-mr-4 size-8 overflow-hidden rounded-full bg-[#e1e4ea] last:mr-0"
                     >
                       <img src={src} alt="" className="size-full object-cover" />
                     </div>
                   ))}
                 </div>
                 <div className="flex flex-col text-[14px]">
+                  {/* pluralise the noun only — "saving with you" then reads
+                      correctly for both 1 friend and many */}
                   <p className="font-medium leading-[1.24] text-ink">
                     {goal.squad.length === 1 ? "1 friend" : `${goal.squad.length} friends`}
                   </p>
-                  <p className="leading-[1.4] text-ink-dim">
-                    {goal.squad.length === 1 ? "is saving with you" : "are saving with you"}
-                  </p>
+                  <p className="leading-[1.4] text-ink-dim">saving with you</p>
                 </div>
               </div>
               <button
