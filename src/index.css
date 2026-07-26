@@ -14,6 +14,12 @@
   --color-track: #404040;
   --color-lime: #b8fe50;
   --color-lime-dim: #666666; /* secondary text on the lime surface */
+
+  /* Motion curves. Built-in CSS easings are too weak for deliberate UI, and
+     ease-in on an entrance/exit stalls exactly when the eye is on it. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1); /* iOS sheet/drawer */
 }
 
 :root {

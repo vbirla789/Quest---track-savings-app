@@ -23,3 +23,8 @@ dist-ssr
 *.sln
 *.sw?
 dist
+.agents
+
+# agent skills (restore with: npx skills add emilkowalski/skill)
+.agents/
+.claude/skills/

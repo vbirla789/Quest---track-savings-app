@@ -130,14 +130,14 @@ export default function Dashboard({
               <div className="relative flex items-center gap-3">
                 <button
                   onClick={onNewQuest}
-                  className="glass flex h-[42px] flex-1 items-center justify-center gap-2 rounded-full text-[14px] font-semibold text-white active:scale-[0.98]"
+                  className="glass flex h-[42px] flex-1 items-center justify-center gap-2 rounded-[14px] text-[14px] font-semibold text-white active:scale-[0.98]"
                 >
                   <SysIcon src="/icons/plus-circle.svg" inset="9.38%" box={18} />
                   New quest
                 </button>
                 <button
                   onClick={onStashCash}
-                  className="glass flex h-[42px] flex-1 items-center justify-center gap-2 rounded-full text-[14px] font-semibold text-white active:scale-[0.98]"
+                  className="glass flex h-[42px] flex-1 items-center justify-center gap-2 rounded-[14px] text-[14px] font-semibold text-white active:scale-[0.98]"
                 >
                   <SysIcon src="/icons/note-round-white.svg" inset="19.45% 6.78%" box={18} />
                   Add money

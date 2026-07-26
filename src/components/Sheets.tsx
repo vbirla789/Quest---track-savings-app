@@ -16,21 +16,23 @@ import { DateWheel, Keyboard } from "./Keyboard";
 
 /* The overlay and the sheet animate as separate layers off one parent state,
    so the scrim fades on its own clock while the panel slides — rather than the
-   whole stack fading and sliding at once, which read as a jump. */
+   whole stack fading and sliding at once, which read as a jump.
+ *
+ * Both directions use the iOS drawer curve (a strong ease-out). An ease-in on
+ * an exit stalls at the exact moment the eye is on it, which is what made the
+ * previous close read as a stutter. A tween on this curve also beats a spring
+ * here: the sheet travels the full screen height, and spring overshoot on a
+ * surface pinned to the bottom edge shows up as a wobble. */
+const EASE_DRAWER = [0.32, 0.72, 0, 1] as [number, number, number, number];
+
 const OVERLAY_V = {
-  hidden: { opacity: 0, transition: { duration: 0.2, ease: "easeIn" as const } },
-  visible: { opacity: 1, transition: { duration: 0.22, ease: "easeOut" as const } },
+  hidden: { opacity: 0, transition: { duration: 0.25, ease: EASE_DRAWER } },
+  visible: { opacity: 1, transition: { duration: 0.35, ease: EASE_DRAWER } },
 };
 
 const SHEET_V = {
-  hidden: {
-    y: "100%",
-    transition: { duration: 0.24, ease: [0.4, 0, 1, 1] as [number, number, number, number] },
-  },
-  visible: {
-    y: 0,
-    transition: { type: "spring" as const, stiffness: 420, damping: 38, mass: 0.9 },
-  },
+  hidden: { y: "100%", transition: { duration: 0.3, ease: EASE_DRAWER } },
+  visible: { y: 0, transition: { duration: 0.4, ease: EASE_DRAWER } },
 };
 
 const FIELD =
@@ -89,7 +91,7 @@ function SheetShell({
              keyboard instead of pushing the label off the top of the screen. */
           animate={{ maxHeight: accessory ? 290 : 350 }}
           initial={false}
-          transition={{ duration: 0.2, ease: "easeOut" }}
+          transition={{ duration: 0.25, ease: EASE_DRAWER }}
         >
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
@@ -100,7 +102,7 @@ function SheetShell({
               /* the outgoing step stays mounted while it animates out — lock it
                  so a fast tap can't type into the question you just answered */
               exit={{ opacity: 0, x: -20, pointerEvents: "none" }}
-              transition={{ duration: 0.2 }}
+              transition={{ duration: 0.2, ease: EASE_DRAWER }}
             >
               <p className="text-[18px] font-medium leading-[1.4] text-white">{label}</p>
               {children}
