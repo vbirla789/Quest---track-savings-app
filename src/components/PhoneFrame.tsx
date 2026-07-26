@@ -14,8 +14,15 @@ export default function PhoneFrame({
   bare?: boolean;
 }) {
   if (bare) {
+    // pad for the notch when launched from the home screen; in a browser tab
+    // the inset is 0 because the chrome already accounts for it
     return (
-      <div className="relative h-svh w-full overflow-hidden bg-canvas">{children}</div>
+      <div
+        className="relative h-svh w-full overflow-hidden bg-canvas"
+        style={{ paddingTop: "env(safe-area-inset-top)" }}
+      >
+        {children}
+      </div>
     );
   }
 
