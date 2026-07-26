@@ -135,7 +135,8 @@ export default function App() {
               <GoalDetails
                 goal={selected}
                 onBack={() => setView("dashboard")}
-                onAdd={(amt) => addToGoal(selected.id, amt)}
+                onStashMoney={() => setSheet("stash")}
+                onNudgeSquad={() => nudge("your squad")}
               />
             </motion.div>
           )}
@@ -147,7 +148,12 @@ export default function App() {
             <NewQuestSheet onClose={() => setSheet(null)} onCreate={createQuest} />
           )}
           {sheet === "stash" && (
-            <StashSheet goals={goals} onClose={() => setSheet(null)} onStash={stashCash} />
+            <StashSheet
+              goals={goals}
+              defaultGoalId={view === "details" ? selectedId ?? undefined : undefined}
+              onClose={() => setSheet(null)}
+              onStash={stashCash}
+            />
           )}
         </AnimatePresence>
 
@@ -179,9 +185,9 @@ export default function App() {
       </PhoneFrame>
 
       <p className="max-w-[390px] text-center text-[12px] leading-relaxed text-ink-faint">
-        A Gen Z savings app concept. Try{" "}
-        <b className="text-ink-dim">Rainy Day Fund</b> (95% there) and tap{" "}
-        <b className="text-ink-dim">Stash &amp; finish</b> to trigger the level-up.
+        A Gen Z savings app concept. Open <b className="text-ink-dim">Rainy day fund</b> (95%
+        there), tap <b className="text-ink-dim">Stash money</b> and add ₹2,500 to trigger the
+        level-up.
       </p>
     </div>
   );

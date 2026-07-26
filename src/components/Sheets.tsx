@@ -126,15 +126,21 @@ const AMOUNT_CHIPS = [500, 1000, 2500];
 
 export function StashSheet({
   goals,
+  defaultGoalId,
   onClose,
   onStash,
 }: {
   goals: Goal[];
+  defaultGoalId?: string;
   onClose: () => void;
   onStash: (goalId: string, amount: number) => void;
 }) {
   const active = goals.filter((g) => g.saved < g.target);
-  const [goalId, setGoalId] = useState(active[0]?.id ?? "");
+  const [goalId, setGoalId] = useState(
+    defaultGoalId && active.some((g) => g.id === defaultGoalId)
+      ? defaultGoalId
+      : active[0]?.id ?? "",
+  );
   const [amount, setAmount] = useState<number>(AMOUNT_CHIPS[0]);
 
   return (

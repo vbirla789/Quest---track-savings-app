@@ -45,13 +45,6 @@ export type Friend = {
   progress: number; // 0..1
 };
 
-export const SOURCE_META: Record<ContributionSource, { icon: string }> = {
-  auto: { icon: "🔁" },
-  roundup: { icon: "🪙" },
-  skip: { icon: "🍜" },
-  boost: { icon: "⚡" },
-};
-
 export const GOALS: Goal[] = [
   {
     id: "goa",
