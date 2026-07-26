@@ -84,12 +84,14 @@ function SheetShell({
           <div className="h-1 w-9 rounded-sm bg-white/64" />
         </div>
         <motion.div
-          className="flex min-h-0 flex-1 flex-col justify-between overflow-hidden rounded-t-[24px] bg-[#202125] py-4"
-          /* the panel is shorter when a keyboard is docked — ease between the
-             two heights so mid-flow step changes don't snap. It's a max, not a
-             fixed height, so on a short phone the panel gives up space to the
-             keyboard instead of pushing the label off the top of the screen. */
-          animate={{ maxHeight: accessory ? 290 : 350 }}
+          /* gap-6 is a floor, not the spacing: justify-between spreads the
+             question and the CTA apart, and the gap guarantees they still
+             breathe if the panel is squeezed on a short screen. */
+          className="flex min-h-0 flex-col justify-between gap-6 overflow-hidden rounded-t-[24px] bg-[#202125] py-4"
+          /* real height, so justify-between has room to work — flex-1 here
+             would collapse to content in an auto-height sheet. min-h-0 still
+             lets it shrink when the sheet is capped to a short viewport. */
+          animate={{ height: accessory ? 290 : 350 }}
           initial={false}
           transition={{ duration: 0.25, ease: EASE_DRAWER }}
         >
