@@ -60,7 +60,14 @@ export default function Dashboard({
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ type: "spring", stiffness: 120, damping: 18 }}
-              className="relative flex flex-col gap-6 overflow-hidden rounded-[28px] border border-white bg-gradient-to-b from-[#5dba3b] to-[#79b238] px-4 pb-5 pt-4"
+              className="relative flex flex-col gap-6 overflow-hidden rounded-[28px] border border-transparent px-4 pb-5 pt-4"
+              style={{
+                /* Gradient stroke from the Figma: a bright top edge that fades
+                   down the sides and disappears at the bottom. Painted as a
+                   border-box layer behind the padding-box fill. */
+                background:
+                  "linear-gradient(180deg,#5dba3b,#79b238) padding-box, linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.28) 45%, rgba(255,255,255,0.04)) border-box",
+              }}
             >
               {/* texture */}
               <div className="pointer-events-none absolute inset-0 overflow-hidden">
