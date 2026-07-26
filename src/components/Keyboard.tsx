@@ -17,6 +17,21 @@ const MOD =
 
 const ROWS = ["qwertyuiop", "asdfghjkl", "zxcvbnm"];
 
+/**
+ * Keys fire on pointerdown, not click. On touch, click only lands after
+ * touchend (plus the browser's tap-delay window), which makes a keyboard feel
+ * laggy — real ones respond the instant your finger lands. preventDefault also
+ * stops the press stealing focus or starting a text selection.
+ */
+function press(fn: () => void) {
+  return {
+    onPointerDown: (e: React.PointerEvent) => {
+      e.preventDefault();
+      fn();
+    },
+  };
+}
+
 export function Keyboard({
   variant = "qwerty",
   onKey,
@@ -39,23 +54,23 @@ export function Keyboard({
       <div className="w-full select-none rounded-t-[25px] bg-[#e6e9ed] px-2 pb-4 pt-3">
         <div className="grid grid-cols-3 gap-1.5">
           {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((n) => (
-            <button key={n} onClick={() => onKey(n)} className={`${KEY} h-[42px] text-[23px]`}>
+            <button key={n} {...press(() => onKey(n))} className={`${KEY} h-[42px] text-[23px]`}>
               {n}
             </button>
           ))}
-          <button onClick={() => onKey("000")} className={`${MOD} h-[42px] text-[19px]`}>
+          <button {...press(() => onKey("000"))} className={`${MOD} h-[42px] text-[19px]`}>
             000
           </button>
-          <button onClick={() => onKey("0")} className={`${KEY} h-[42px] text-[23px]`}>
+          <button {...press(() => onKey("0"))} className={`${KEY} h-[42px] text-[23px]`}>
             0
           </button>
-          <button onClick={onBackspace} className={`${MOD} h-[42px] text-[19px]`} aria-label="Delete">
+          <button {...press(onBackspace)} className={`${MOD} h-[42px] text-[19px]`} aria-label="Delete">
             ⌫
           </button>
         </div>
         {onDone && (
           <button
-            onClick={onDone}
+            {...press(() => onDone?.())}
             className="mt-1.5 h-[42px] w-full rounded-[8px] bg-[#0088ff] text-[17px] text-white active:bg-[#0072d6]"
           >
             {doneLabel}
@@ -75,10 +90,10 @@ export function Keyboard({
           {ROWS[0].split("").map((ch) => (
             <button
               key={ch}
-              onClick={() => {
+              {...press(() => {
                 onKey(cap(ch));
                 setShift(false);
-              }}
+              })}
               className={`${KEY} h-[42px] flex-1 text-[23px]`}
             >
               {cap(ch)}
@@ -90,10 +105,10 @@ export function Keyboard({
           {ROWS[1].split("").map((ch) => (
             <button
               key={ch}
-              onClick={() => {
+              {...press(() => {
                 onKey(cap(ch));
                 setShift(false);
-              }}
+              })}
               className={`${KEY} h-[42px] flex-1 text-[23px]`}
             >
               {cap(ch)}
@@ -103,7 +118,7 @@ export function Keyboard({
         {/* row 3 — shift · keys · delete */}
         <div className="flex items-center gap-[13px]">
           <button
-            onClick={() => setShift((s) => !s)}
+            {...press(() => setShift((s) => !s))}
             className={`${shift ? KEY : MOD} h-[42px] w-[42px] text-[18px]`}
             aria-label="Shift"
           >
@@ -113,26 +128,26 @@ export function Keyboard({
             {ROWS[2].split("").map((ch) => (
               <button
                 key={ch}
-                onClick={() => {
+                {...press(() => {
                   onKey(cap(ch));
                   setShift(false);
-                }}
+                })}
                 className={`${KEY} h-[42px] flex-1 text-[23px]`}
               >
                 {cap(ch)}
               </button>
             ))}
           </div>
-          <button onClick={onBackspace} className={`${MOD} h-[42px] w-[42px] text-[18px]`} aria-label="Delete">
+          <button {...press(onBackspace)} className={`${MOD} h-[42px] w-[42px] text-[18px]`} aria-label="Delete">
             ⌫
           </button>
         </div>
         {/* row 4 — ABC · space · return */}
         <div className="flex gap-[6px]">
           <button className={`${MOD} h-[42px] w-[85px] text-[17px]`}>ABC</button>
-          <button onClick={() => onKey(" ")} className={`${KEY} h-[42px] flex-1`} aria-label="Space" />
+          <button {...press(() => onKey(" "))} className={`${KEY} h-[42px] flex-1`} aria-label="Space" />
           <button
-            onClick={onDone}
+            {...press(() => onDone?.())}
             className="grid h-[42px] w-[86px] place-items-center rounded-[8px] bg-[#0088ff] text-[17px] text-white active:bg-[#0072d6]"
           >
             {doneLabel}

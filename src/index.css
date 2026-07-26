@@ -53,9 +53,21 @@ body {
   font-feature-settings: "tnum";
 }
 
+/* Touch tuning. `manipulation` opts out of double-tap-to-zoom, which is what
+   makes browsers hold a tap back before dispatching it — the delay reads as
+   lag on every button. The tap highlight is a grey flash we already replace
+   with our own :active states. */
+button {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* Thin, unobtrusive scrollbar inside the phone */
 .phone-scroll {
   scrollbar-width: none;
+  /* don't let a fling inside the screen chain out to the page behind it */
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 .phone-scroll::-webkit-scrollbar {
   display: none;

@@ -68,9 +68,10 @@ function SheetShell({
       exit="hidden"
     >
       {/* overlay */}
+      {/* touch-none so dragging the scrim doesn't scroll the screen behind it */}
       <motion.div
         variants={OVERLAY_V}
-        className="absolute inset-0 bg-black/80"
+        className="absolute inset-0 touch-none bg-black/80"
         onClick={onClose}
       />
       {/* sheet, riding above it. Promoted to its own layer so sliding never
@@ -183,12 +184,13 @@ export function NewQuestSheet({
       valid: name.trim().length > 0,
       field: (
         <input
-          autoFocus
-          // the on-screen keyboard below is the only input surface, so keep the
-          // native one from covering it on a real phone
+          // no autoFocus: on a phone, focusing a field inside a sheet that has
+          // just animated up makes the browser scroll it into view and jolts
+          // the layout — and the on-screen keyboard below is the input surface
+          // anyway, so focus buys nothing
+          readOnly
           inputMode="none"
           value={name}
-          onChange={(e) => setName(e.target.value)}
           placeholder="eg. Ladakh ride"
           className={FIELD}
         />
