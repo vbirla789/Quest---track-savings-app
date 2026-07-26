@@ -66,11 +66,18 @@ body {
 }
 
 /* On a real phone the device draws its own status bar and home indicator,
-   so ours are redundant. */
+   so ours are redundant. The screens then carry the safe-area insets — the
+   frame can't, because full-bleed overlays are positioned against it. */
 @media (max-width: 640px) {
   .faux-status,
   .faux-home-bar {
     display: none;
+  }
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  .safe-bottom {
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
   }
 }
 

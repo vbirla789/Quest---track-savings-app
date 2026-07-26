@@ -33,7 +33,7 @@ export default function Dashboard({
 
   return (
     <div className="relative h-full overflow-hidden bg-canvas">
-      <div className="phone-scroll h-full overflow-y-auto pb-12">
+      <div className="phone-scroll safe-top h-full overflow-y-auto pb-12">
         <StatusBar />
 
         <div className="flex flex-col gap-5 px-4 pt-4">

@@ -75,17 +75,19 @@ function SheetShell({
           repaints the docked keyboard's ~30 keys. */}
       <motion.div
         variants={SHEET_V}
-        className="absolute inset-x-0 bottom-0"
+        className="absolute inset-x-0 bottom-0 flex max-h-full flex-col"
         style={{ willChange: "transform" }}
       >
-        <div className="flex justify-center py-3">
+        <div className="flex shrink-0 justify-center py-3">
           <div className="h-1 w-9 rounded-sm bg-white/64" />
         </div>
         <motion.div
-          className="flex flex-col justify-between overflow-hidden rounded-t-[24px] bg-[#202125] py-4"
+          className="flex min-h-0 flex-1 flex-col justify-between overflow-hidden rounded-t-[24px] bg-[#202125] py-4"
           /* the panel is shorter when a keyboard is docked — ease between the
-             two heights so mid-flow step changes don't snap */
-          animate={{ height: accessory ? 290 : 350 }}
+             two heights so mid-flow step changes don't snap. It's a max, not a
+             fixed height, so on a short phone the panel gives up space to the
+             keyboard instead of pushing the label off the top of the screen. */
+          animate={{ maxHeight: accessory ? 290 : 350 }}
           initial={false}
           transition={{ duration: 0.2, ease: "easeOut" }}
         >
@@ -106,7 +108,7 @@ function SheetShell({
             </motion.div>
           </AnimatePresence>
 
-          <div className="px-4">
+          <div className="shrink-0 px-4">
             <button
               disabled={ctaDisabled}
               onClick={onCta}
@@ -116,7 +118,7 @@ function SheetShell({
             </button>
           </div>
         </motion.div>
-        {accessory}
+        <div className="shrink-0">{accessory}</div>
       </motion.div>
     </motion.div>
   );

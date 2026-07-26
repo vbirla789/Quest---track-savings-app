@@ -58,7 +58,7 @@ export default function GoalDetails({
 
   return (
     <div className="relative h-full overflow-hidden bg-canvas">
-      <div className="phone-scroll h-full overflow-y-auto pb-36">
+      <div className="phone-scroll safe-top h-full overflow-y-auto pb-36">
         <StatusBar />
 
         <div className="flex flex-col items-center gap-6 px-4 pt-4">
@@ -226,7 +226,7 @@ export default function GoalDetails({
 
       {/* sticky footer — single primary CTA over a bottom fade */}
       {/* phone has no faux home bar, so the CTA sits 16px off the edge there */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40 bg-gradient-to-b from-transparent to-black to-60% px-4 pb-4 pt-3 sm:pb-8">
+      <div className="safe-bottom pointer-events-none absolute inset-x-0 bottom-0 z-40 bg-gradient-to-b from-transparent to-black to-60% px-4 pb-4 pt-3 sm:pb-8">
         <button
           onClick={onStashMoney}
           className="pointer-events-auto flex h-12 w-full items-center justify-center gap-2 rounded-full bg-lime text-[16px] font-semibold text-black active:scale-[0.98]"
