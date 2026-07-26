@@ -1,25 +1,45 @@
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useState, type ReactNode } from "react";
 import type { Goal } from "../data";
-import { inr, inrPlain } from "../lib/format";
+import { inrPlain } from "../lib/format";
+import { DateWheel, Keyboard } from "./Keyboard";
 
 /* ----------------------------------------------------------------------------
  * Bottom sheets for the dashboard's two primary actions.
- * - NewQuestSheet  → name + emoji + target → creates a goal
- * - StashSheet     → pick a quest + amount → adds a contribution
- * Both slide up inside the phone with a dimmed backdrop.
+ *
+ * Both ask ONE question per step so the user never faces a wall of fields:
+ *   New quest → goal name → target amount → target date
+ *   Add money → which quest → how much
+ * The shell (scrim, grabber, panel, single CTA) is shared; only the question
+ * block swaps, sliding sideways as you advance.
  * --------------------------------------------------------------------------*/
 
 const SPRING = { type: "spring" as const, stiffness: 320, damping: 30 };
 
-function Sheet({
-  title,
+const FIELD =
+  "w-full rounded-[16px] bg-elev p-4 text-[14px] font-medium leading-[1.4] text-white outline-none placeholder:font-normal placeholder:text-ink-dim";
+
+function SheetShell({
+  step,
+  label,
+  helper,
+  cta,
+  ctaDisabled,
+  onCta,
   onClose,
   children,
+  accessory,
 }: {
-  title: string;
+  step: number;
+  label: string;
+  helper: string;
+  cta: string;
+  ctaDisabled?: boolean;
+  onCta: () => void;
   onClose: () => void;
   children: ReactNode;
+  /** faux keyboard / date wheel docked under the panel */
+  accessory?: ReactNode;
 }) {
   return (
     <motion.div
@@ -28,25 +48,50 @@ function Sheet({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
-      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/80" onClick={onClose} />
       <motion.div
-        className="relative rounded-t-[24px] bg-card px-4 pb-8 pt-3"
+        className="relative"
         initial={{ y: "100%" }}
         animate={{ y: 0 }}
         exit={{ y: "100%" }}
         transition={SPRING}
       >
-        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-elev" />
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-[18px] font-semibold">{title}</h2>
-          <button
-            onClick={onClose}
-            className="grid size-8 place-items-center rounded-full bg-elev text-[13px] text-ink-dim active:scale-95"
-          >
-            ✕
-          </button>
+        <div className="flex justify-center py-3">
+          <div className="h-1 w-9 rounded-sm bg-white/64" />
         </div>
-        {children}
+        <div
+          className={`flex flex-col justify-between rounded-t-[24px] bg-[#202125] py-4 ${
+            accessory ? "h-[290px]" : "h-[350px]"
+          }`}
+        >
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={step}
+              className="flex flex-col gap-3 px-4"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              /* the outgoing step stays mounted while it animates out — lock it
+                 so a fast tap can't type into the question you just answered */
+              exit={{ opacity: 0, x: -20, pointerEvents: "none" }}
+              transition={{ duration: 0.2 }}
+            >
+              <p className="text-[18px] font-medium leading-[1.4] text-white">{label}</p>
+              {children}
+              <p className="text-[14px] leading-[1.4] text-ink-dim">{helper}</p>
+            </motion.div>
+          </AnimatePresence>
+
+          <div className="px-4">
+            <button
+              disabled={ctaDisabled}
+              onClick={onCta}
+              className="h-12 w-full rounded-full bg-lime text-[16px] font-semibold text-black transition-opacity active:scale-[0.98] disabled:opacity-60 disabled:active:scale-100"
+            >
+              {cta}
+            </button>
+          </div>
+        </div>
+        {accessory}
       </motion.div>
     </motion.div>
   );
@@ -54,73 +99,136 @@ function Sheet({
 
 /* ------------------------------- New quest ------------------------------- */
 
-const EMOJIS = ["🏖️", "📱", "🛵", "🎮", "✈️", "💻", "🎧", "🛟"];
-const TARGET_CHIPS = [10000, 25000, 50000, 100000];
+/** Pick an icon from the goal's name so we don't need to ask a fourth question. */
+const EMOJI_HINTS: [RegExp, string][] = [
+  [/trip|travel|vacation|holiday|goa|ladakh|europe/i, "🏖️"],
+  [/iphone|phone|pixel|samsung/i, "📱"],
+  [/macbook|laptop|pc|desktop/i, "💻"],
+  [/bike|scooter|cycle|ride/i, "🛵"],
+  [/car/i, "🚗"],
+  [/game|ps5|xbox|console/i, "🎮"],
+  [/rainy|emergency|safety/i, "🛟"],
+  [/camera|lens/i, "📷"],
+  [/headphone|airpod|earbud/i, "🎧"],
+  [/wedding|shaadi/i, "💍"],
+  [/course|college|fees|study/i, "🎓"],
+];
+
+function guessEmoji(name: string) {
+  for (const [re, emoji] of EMOJI_HINTS) if (re.test(name)) return emoji;
+  return "🎯";
+}
 
 export function NewQuestSheet({
   onClose,
   onCreate,
 }: {
   onClose: () => void;
-  onCreate: (name: string, emoji: string, target: number) => void;
+  onCreate: (input: { name: string; emoji: string; target: number; targetDate: string }) => void;
 }) {
+  const [step, setStep] = useState(0);
   const [name, setName] = useState("");
-  const [emoji, setEmoji] = useState(EMOJIS[0]);
-  const [target, setTarget] = useState<number | null>(null);
-  const valid = name.trim().length > 0 && target !== null && target > 0;
+  const [amount, setAmount] = useState("");
+  // seed the wheel six months out so the field reads as filled, like the design
+  const [date, setDate] = useState(() => {
+    const d = new Date();
+    d.setMonth(d.getMonth() + 6);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  });
+
+  const target = Number(amount) || 0;
+
+  const steps = [
+    {
+      label: "Goal name",
+      helper: "You can always change this later",
+      cta: "Continue",
+      valid: name.trim().length > 0,
+      field: (
+        <input
+          autoFocus
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="eg. Ladakh ride"
+          className={FIELD}
+        />
+      ),
+      accessory: (
+        <Keyboard
+          variant="qwerty"
+          onKey={(ch) => setName((n) => n + ch)}
+          onBackspace={() => setName((n) => n.slice(0, -1))}
+          onDone={() => name.trim() && setStep(1)}
+        />
+      ),
+    },
+    {
+      label: "Target amount",
+      helper: "You can always change this later",
+      cta: "Continue",
+      valid: target > 0,
+      field: (
+        <input
+          readOnly
+          inputMode="numeric"
+          value={amount ? `₹${inrPlain(target)}` : ""}
+          placeholder="₹50,000"
+          className={`${FIELD} tnum`}
+        />
+      ),
+      accessory: (
+        <Keyboard
+          variant="numeric"
+          onKey={(ch) => setAmount((a) => (a + ch).replace(/^0+/, "").slice(0, 9))}
+          onBackspace={() => setAmount((a) => a.slice(0, -1))}
+        />
+      ),
+    },
+    {
+      label: "Target date",
+      helper: "Stay on track by adding a target date",
+      cta: "Start quest",
+      valid: date !== "",
+      field: (
+        <input
+          readOnly
+          value={date ? new Date(date).toLocaleDateString("en-GB") : ""}
+          placeholder="DD/MM/YYYY"
+          className={`${FIELD} tnum`}
+        />
+      ),
+      accessory: <DateWheel value={date} onChange={setDate} />,
+    },
+  ];
+
+  const current = steps[step];
+
+  function advance() {
+    if (!current.valid) return;
+    if (step < steps.length - 1) {
+      setStep(step + 1);
+      return;
+    }
+    onCreate({ name: name.trim(), emoji: guessEmoji(name), target, targetDate: date });
+  }
 
   return (
-    <Sheet title="New quest" onClose={onClose}>
-      <label className="mb-2 block text-[13px] font-medium text-ink-dim">Pick an icon</label>
-      <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
-        {EMOJIS.map((e) => (
-          <button
-            key={e}
-            onClick={() => setEmoji(e)}
-            className={`grid size-11 shrink-0 place-items-center rounded-xl border text-[22px] transition-colors ${
-              emoji === e ? "border-lime bg-lime/10" : "border-elev bg-transparent"
-            }`}
-          >
-            {e}
-          </button>
-        ))}
-      </div>
-
-      <label className="mb-2 block text-[13px] font-medium text-ink-dim">What are you saving for?</label>
-      <input
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        placeholder="e.g. Ladakh ride"
-        className="mb-4 h-12 w-full rounded-xl bg-elev px-4 text-[15px] font-medium text-ink placeholder:text-ink-dim outline-none focus:ring-2 focus:ring-lime/60"
-      />
-
-      <label className="mb-2 block text-[13px] font-medium text-ink-dim">Target</label>
-      <div className="mb-6 flex gap-2">
-        {TARGET_CHIPS.map((t) => (
-          <button
-            key={t}
-            onClick={() => setTarget(t)}
-            className={`h-10 flex-1 rounded-full text-[13px] font-semibold tnum transition-colors ${
-              target === t ? "bg-lime text-black" : "bg-elev text-ink"
-            }`}
-          >
-            {t >= 100000 ? "₹1L" : `₹${inrPlain(t / 1000)}k`}
-          </button>
-        ))}
-      </div>
-
-      <button
-        disabled={!valid}
-        onClick={() => valid && onCreate(name.trim(), emoji, target!)}
-        className="h-12 w-full rounded-full bg-lime text-[16px] font-semibold text-black transition-opacity active:scale-[0.98] disabled:opacity-40"
-      >
-        Start quest
-      </button>
-    </Sheet>
+    <SheetShell
+      step={step}
+      label={current.label}
+      helper={current.helper}
+      cta={current.cta}
+      ctaDisabled={!current.valid}
+      onCta={advance}
+      onClose={onClose}
+      accessory={current.accessory}
+    >
+      {current.field}
+    </SheetShell>
   );
 }
 
-/* ------------------------------- Stash cash ------------------------------ */
+/* ------------------------------- Add money ------------------------------- */
 
 const AMOUNT_CHIPS = [500, 1000, 2500];
 
@@ -136,58 +244,108 @@ export function StashSheet({
   onStash: (goalId: string, amount: number) => void;
 }) {
   const active = goals.filter((g) => g.saved < g.target);
-  const [goalId, setGoalId] = useState(
-    defaultGoalId && active.some((g) => g.id === defaultGoalId)
-      ? defaultGoalId
-      : active[0]?.id ?? "",
-  );
-  const [amount, setAmount] = useState<number>(AMOUNT_CHIPS[0]);
+  const presetId =
+    defaultGoalId && active.some((g) => g.id === defaultGoalId) ? defaultGoalId : "";
+
+  // Opening from a goal's own screen already answers "which quest?" — skip it.
+  const [step, setStep] = useState(presetId ? 1 : 0);
+  const [goalId, setGoalId] = useState(presetId || active[0]?.id || "");
+  const [amount, setAmount] = useState("");
+
+  const value = Number(amount) || 0;
+  const goal = active.find((g) => g.id === goalId);
+
+  const steps = [
+    {
+      label: "Add to which quest?",
+      helper: "Pick where this money should go",
+      cta: "Continue",
+      valid: goalId !== "",
+      accessory: undefined,
+      field: (
+        <div className="flex max-h-[168px] flex-col gap-2 overflow-y-auto phone-scroll">
+          {active.map((g) => {
+            const p = Math.round((g.saved / g.target) * 100);
+            const selected = goalId === g.id;
+            return (
+              <button
+                key={g.id}
+                onClick={() => setGoalId(g.id)}
+                className={`flex items-center gap-3 rounded-[16px] border p-3 text-left transition-colors ${
+                  selected ? "border-lime bg-lime/10" : "border-transparent bg-elev"
+                }`}
+              >
+                <span className="text-[20px]">{g.emoji}</span>
+                <span className="flex-1 text-[14px] font-medium">{g.name}</span>
+                <span className="text-[13px] font-medium text-ink-dim tnum">{p}%</span>
+              </button>
+            );
+          })}
+        </div>
+      ),
+    },
+    {
+      label: "How much?",
+      helper: goal ? `Adding to ${goal.name}` : "Enter an amount to stash",
+      cta: value > 0 ? `Add ${`₹${inrPlain(value)}`}` : "Add money",
+      valid: value > 0,
+      accessory: (
+        <Keyboard
+          variant="numeric"
+          onKey={(ch) => setAmount((a) => (a + ch).replace(/^0+/, "").slice(0, 9))}
+          onBackspace={() => setAmount((a) => a.slice(0, -1))}
+        />
+      ),
+      field: (
+        <div className="flex flex-col gap-3">
+          <input
+            readOnly
+            inputMode="numeric"
+            value={amount ? `₹${inrPlain(value)}` : ""}
+            placeholder="₹2,500"
+            className={`${FIELD} tnum`}
+          />
+          <div className="flex gap-2">
+            {AMOUNT_CHIPS.map((a) => (
+              <button
+                key={a}
+                onClick={() => setAmount(String(a))}
+                className={`h-9 flex-1 rounded-full text-[13px] font-semibold tnum transition-colors ${
+                  value === a ? "bg-lime text-black" : "bg-elev text-ink"
+                }`}
+              >
+                ₹{inrPlain(a)}
+              </button>
+            ))}
+          </div>
+        </div>
+      ),
+    },
+  ];
+
+  const current = steps[step];
+
+  function advance() {
+    if (!current.valid) return;
+    if (step === 0) {
+      setStep(1);
+      return;
+    }
+    onStash(goalId, value);
+  }
 
   return (
-    <Sheet title="Stash cash" onClose={onClose}>
-      <label className="mb-2 block text-[13px] font-medium text-ink-dim">Into which quest?</label>
-      <div className="mb-4 flex flex-col gap-2">
-        {active.map((g) => {
-          const p = Math.round((g.saved / g.target) * 100);
-          const selected = goalId === g.id;
-          return (
-            <button
-              key={g.id}
-              onClick={() => setGoalId(g.id)}
-              className={`flex items-center gap-3 rounded-xl border p-3 text-left transition-colors ${
-                selected ? "border-lime bg-lime/10" : "border-elev bg-transparent"
-              }`}
-            >
-              <span className="text-[20px]">{g.emoji}</span>
-              <span className="flex-1 text-[14px] font-medium">{g.name}</span>
-              <span className="text-[13px] font-medium text-ink-dim tnum">{p}%</span>
-            </button>
-          );
-        })}
-      </div>
-
-      <label className="mb-2 block text-[13px] font-medium text-ink-dim">How much?</label>
-      <div className="mb-6 flex gap-2">
-        {AMOUNT_CHIPS.map((a) => (
-          <button
-            key={a}
-            onClick={() => setAmount(a)}
-            className={`h-10 flex-1 rounded-full text-[13px] font-semibold tnum transition-colors ${
-              amount === a ? "bg-lime text-black" : "bg-elev text-ink"
-            }`}
-          >
-            ₹{inrPlain(a)}
-          </button>
-        ))}
-      </div>
-
-      <button
-        disabled={!goalId}
-        onClick={() => goalId && onStash(goalId, amount)}
-        className="h-12 w-full rounded-full bg-lime text-[16px] font-semibold text-black transition-opacity active:scale-[0.98] disabled:opacity-40"
-      >
-        Stash {inr(amount)}
-      </button>
-    </Sheet>
+    <SheetShell
+      step={step}
+      label={current.label}
+      helper={current.helper}
+      cta={current.cta}
+      ctaDisabled={!current.valid}
+      onCta={advance}
+      onClose={onClose}
+      accessory={current.accessory}
+    >
+      {current.field}
+    </SheetShell>
   );
 }

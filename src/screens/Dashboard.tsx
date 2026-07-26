@@ -60,7 +60,7 @@ export default function Dashboard({
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ type: "spring", stiffness: 120, damping: 18 }}
-              className="relative flex flex-col gap-6 overflow-hidden rounded-[28px] border border-transparent px-4 pb-5 pt-4"
+              className="relative flex flex-col gap-4 overflow-hidden rounded-[32px] border border-transparent p-4"
               style={{
                 /* Gradient stroke from the Figma: a bright top edge that fades
                    down the sides and disappears at the bottom. Painted as a
@@ -171,9 +171,9 @@ export default function Dashboard({
                       >
                         <img src={f.avatar} alt="" className="size-full object-cover" />
                       </div>
-                      <div className="flex flex-col">
-                        <p className="text-[16px] font-medium leading-[1.24]">{f.name}</p>
-                        <p className="text-[14px] leading-[1.4] text-ink-dim">
+                      <div className="flex flex-col text-[14px]">
+                        <p className="font-medium leading-[1.24]">{f.name}</p>
+                        <p className="leading-[1.4] text-ink-dim">
                           {f.goal}, {Math.round(f.progress * 100)}%
                         </p>
                       </div>

@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { GOALS, levelFromXp, type Goal } from "./data";
+import { GOALS, levelFromXp, type Contribution, type Goal } from "./data";
 import PhoneFrame from "./components/PhoneFrame";
 import { NewQuestSheet, StashSheet } from "./components/Sheets";
 import Dashboard from "./screens/Dashboard";
@@ -48,7 +48,20 @@ export default function App() {
     const newSaved = Math.min(goal.target, goal.saved + amount);
     const nowComplete = newSaved >= goal.target;
 
-    const updated = goals.map((g) => (g.id === id ? { ...g, saved: newSaved } : g));
+    // Record the stash in the ledger, newest first, so it lands at the top of
+    // "Recent stashes" rather than being invisible.
+    const entry: Contribution = {
+      id: `${id}-${Date.now()}`,
+      source: "boost",
+      label: "Manual boost",
+      amount,
+      daysAgo: 0,
+    };
+    const updated = goals.map((g) =>
+      g.id === id
+        ? { ...g, saved: newSaved, contributions: [entry, ...g.contributions] }
+        : g,
+    );
     setGoals(updated);
 
     if (nowComplete && !wasComplete) {
@@ -65,22 +78,41 @@ export default function App() {
     setTimeout(() => setToast(null), 2200);
   }
 
-  function createQuest(name: string, emoji: string, target: number) {
+  function createQuest({
+    name,
+    emoji,
+    target,
+    targetDate,
+  }: {
+    name: string;
+    emoji: string;
+    target: number;
+    targetDate: string;
+  }) {
     const id = `${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${goals.length}`;
+    // The target date sets the pace: split the goal across the weeks remaining
+    // so the "Savings/wk" stat and finish projection mean something from day one.
+    const weeksLeft = Math.max(
+      1,
+      Math.ceil((new Date(targetDate).getTime() - Date.now()) / (7 * 24 * 60 * 60 * 1000)),
+    );
     setGoals([
-      ...goals,
       {
         id,
         name,
         emoji,
         target,
         saved: 0,
-        weeklyAutoSave: 1000,
+        weeklyAutoSave: Math.ceil(target / weeksLeft / 50) * 50,
         streakWeeks: 0,
-        deadline: "—",
+        deadline: new Date(targetDate).toLocaleDateString("en-GB", {
+          month: "short",
+          year: "numeric",
+        }),
         squad: [],
         contributions: [],
       },
+      ...goals, // newest quest sits at the top of the stack
     ]);
     setSheet(null);
     setToast(`Quest started — ${emoji} ${name}`);
@@ -93,7 +125,7 @@ export default function App() {
     const g = goals.find((x) => x.id === goalId);
     const completes = g && g.saved + amount >= g.target;
     if (!completes) {
-      setToast(`Stashed ₹ ${amount.toLocaleString("en-IN")} to ${g?.name ?? "quest"} ⚡`);
+      setToast(`Stashed ₹${amount.toLocaleString("en-IN")} to ${g?.name ?? "quest"} ⚡`);
       setTimeout(() => setToast(null), 2200);
     }
   }
