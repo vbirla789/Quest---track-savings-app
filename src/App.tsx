@@ -240,11 +240,14 @@ export default function App() {
 
         {/* bottom sheets for the two dashboard CTAs */}
         <AnimatePresence>
+          {/* keys matter here: "quest" and "edit" render the same component, so
+              without them AnimatePresence can't tell one sheet from the other */}
           {sheet === "quest" && (
-            <NewQuestSheet onClose={() => setSheet(null)} onSubmit={createQuest} />
+            <NewQuestSheet key="quest" onClose={() => setSheet(null)} onSubmit={createQuest} />
           )}
           {sheet === "edit" && selected && (
             <NewQuestSheet
+              key="edit"
               initial={{
                 name: selected.name,
                 target: selected.target,
@@ -256,6 +259,7 @@ export default function App() {
           )}
           {sheet === "stash" && (
             <StashSheet
+              key="stash"
               goals={goals}
               defaultGoalId={view === "details" ? selectedId ?? undefined : undefined}
               onClose={() => setSheet(null)}

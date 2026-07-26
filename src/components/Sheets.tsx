@@ -14,7 +14,24 @@ import { DateWheel, Keyboard } from "./Keyboard";
  * block swaps, sliding sideways as you advance.
  * --------------------------------------------------------------------------*/
 
-const SPRING = { type: "spring" as const, stiffness: 320, damping: 30 };
+/* The overlay and the sheet animate as separate layers off one parent state,
+   so the scrim fades on its own clock while the panel slides — rather than the
+   whole stack fading and sliding at once, which read as a jump. */
+const OVERLAY_V = {
+  hidden: { opacity: 0, transition: { duration: 0.2, ease: "easeIn" as const } },
+  visible: { opacity: 1, transition: { duration: 0.22, ease: "easeOut" as const } },
+};
+
+const SHEET_V = {
+  hidden: {
+    y: "100%",
+    transition: { duration: 0.24, ease: [0.4, 0, 1, 1] as [number, number, number, number] },
+  },
+  visible: {
+    y: 0,
+    transition: { type: "spring" as const, stiffness: 420, damping: 38, mass: 0.9 },
+  },
+};
 
 const FIELD =
   "w-full rounded-[16px] bg-elev p-4 text-[14px] font-medium leading-[1.4] text-white outline-none placeholder:font-normal placeholder:text-ink-dim";
@@ -43,26 +60,34 @@ function SheetShell({
 }) {
   return (
     <motion.div
-      className="absolute inset-0 z-50 flex flex-col justify-end"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
+      className="absolute inset-0 z-50"
+      initial="hidden"
+      animate="visible"
+      exit="hidden"
     >
-      <div className="absolute inset-0 bg-black/80" onClick={onClose} />
+      {/* overlay */}
       <motion.div
-        className="relative"
-        initial={{ y: "100%" }}
-        animate={{ y: 0 }}
-        exit={{ y: "100%" }}
-        transition={SPRING}
+        variants={OVERLAY_V}
+        className="absolute inset-0 bg-black/80"
+        onClick={onClose}
+      />
+      {/* sheet, riding above it. Promoted to its own layer so sliding never
+          repaints the docked keyboard's ~30 keys. */}
+      <motion.div
+        variants={SHEET_V}
+        className="absolute inset-x-0 bottom-0"
+        style={{ willChange: "transform" }}
       >
         <div className="flex justify-center py-3">
           <div className="h-1 w-9 rounded-sm bg-white/64" />
         </div>
-        <div
-          className={`flex flex-col justify-between rounded-t-[24px] bg-[#202125] py-4 ${
-            accessory ? "h-[290px]" : "h-[350px]"
-          }`}
+        <motion.div
+          className="flex flex-col justify-between overflow-hidden rounded-t-[24px] bg-[#202125] py-4"
+          /* the panel is shorter when a keyboard is docked — ease between the
+             two heights so mid-flow step changes don't snap */
+          animate={{ height: accessory ? 290 : 350 }}
+          initial={false}
+          transition={{ duration: 0.2, ease: "easeOut" }}
         >
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
@@ -90,7 +115,7 @@ function SheetShell({
               {cta}
             </button>
           </div>
-        </div>
+        </motion.div>
         {accessory}
       </motion.div>
     </motion.div>
