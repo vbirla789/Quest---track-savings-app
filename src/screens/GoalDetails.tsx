@@ -163,7 +163,7 @@ export default function GoalDetails({
           <SysIcon src="/icons/note-round-black.svg" inset="19.45% 6.78%" box={20} />
           Add money
         </button>
-        <div className="absolute inset-x-0 bottom-0 flex justify-center pb-2 pt-3">
+        <div className="faux-home-bar absolute inset-x-0 bottom-0 flex justify-center pb-2 pt-3">
           <div className="h-[5px] w-[124px] rounded-lg bg-white" />
         </div>
       </div>

@@ -193,7 +193,7 @@ export default function Dashboard({
       </div>
 
       {/* iOS home bar — pinned to the phone, not the scroll content */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40 flex justify-center pb-2 pt-3">
+      <div className="faux-home-bar pointer-events-none absolute inset-x-0 bottom-0 z-40 flex justify-center pb-2 pt-3">
         <div className="h-[5px] w-[124px] rounded-lg bg-white" />
       </div>
     </div>
