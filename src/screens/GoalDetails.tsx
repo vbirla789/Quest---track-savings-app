@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
-import { weeksToGoal, type ContributionSource, type Goal } from "../data";
+import { daysToGoal, type ContributionSource, type Goal } from "../data";
 import { inrPlain } from "../lib/format";
 import { useCountUp } from "../lib/useCountUp";
 import ProgressRing from "../components/ProgressRing";
@@ -40,7 +40,7 @@ export default function GoalDetails({
 }) {
   const p = Math.min(1, goal.saved / goal.target);
   const animatedSaved = useCountUp(goal.saved);
-  const weeksLeft = weeksToGoal(goal);
+  const daysLeft = daysToGoal(goal);
   const remaining = Math.max(0, goal.target - goal.saved);
 
   const [menuOpen, setMenuOpen] = useState(false);
@@ -137,29 +137,33 @@ export default function GoalDetails({
           <div className="flex items-start gap-3">
             <Stat
               icon={
+                <SysIcon src="/icons/rewind-check.svg" inset="5.21% 13.54% 9.38% 13.54%" />
+              }
+              value={`₹${inrPlain(remaining)}`}
+              label="Still to go"
+            />
+            <Stat
+              icon={<SysIcon src="/icons/note-outline.svg" inset="19.45% 6.78%" />}
+              value={`₹${inrPlain(goal.target)}`}
+              label="Target"
+            />
+            <Stat
+              icon={
                 <SysIcon
                   src="/icons/calendar-outline.svg"
                   inset="13.54% 10.75% 15.04% 10.78%"
                 />
               }
-              value={`${goal.streakWeeks} Week`}
-              label="Streak"
-            />
-            <Stat
-              icon={<SysIcon src="/icons/note-outline.svg" inset="19.45% 6.78%" />}
-              value={`₹${inrPlain(goal.weeklyAutoSave)}/wk`}
-              label="Savings"
-            />
-            <Stat
-              icon={<SysIcon src="/icons/crosshair-outline.svg" inset="9.38%" />}
-              value={weeksLeft === Infinity ? "—" : `${weeksLeft} week`}
-              label="Finish"
+              value={
+                daysLeft === Infinity ? "—" : `${daysLeft} ${daysLeft === 1 ? "day" : "days"}`
+              }
+              label="Time left"
             />
           </div>
 
           {/* squad on this goal */}
           {goal.squad.length > 0 && (
-            <div className="surface-card flex items-center justify-between rounded-[24px] p-4">
+            <div className="surface-card flex items-center justify-between rounded-[16px] p-4">
               <div className="flex items-center gap-3">
                 <div className="flex">
                   {goal.squad.map((src, i) => (
@@ -182,7 +186,7 @@ export default function GoalDetails({
               </div>
               <button
                 onClick={onNudgeSquad}
-                className="flex h-9 w-[94px] items-center justify-center rounded-full border border-white/20 backdrop-blur-[12px] text-[14px] font-semibold text-lime active:scale-95"
+                className="flex h-9 items-center justify-center rounded-full bg-elev px-4 text-[14px] font-semibold text-lime active:scale-95"
               >
                 Nudge 👋
               </button>
@@ -204,7 +208,7 @@ export default function GoalDetails({
               </div>
             )}
             {goal.contributions.map((c) => (
-              <div key={c.id} className="surface-card flex items-center justify-between rounded-[24px] p-4">
+              <div key={c.id} className="surface-card flex items-center justify-between rounded-[16px] p-4">
                 <div className="flex items-center gap-3">
                   <div className="grid size-9 place-items-center rounded-lg border border-elev">
                     <SysIcon src={STASH_ICONS[c.source].src} inset={STASH_ICONS[c.source].inset} />
@@ -246,8 +250,8 @@ function Stat({ icon, value, label }: { icon: React.ReactNode; value: string; la
   return (
     <div className="surface-card flex flex-1 flex-col items-center gap-1.5 rounded-[24px] p-2">
       <div className="grid size-8 place-items-center rounded-lg p-1">{icon}</div>
-      <div className="flex w-full flex-col gap-1 text-center text-[13px] font-medium">
-        <p className="leading-[1.24] text-ink tnum">{value}</p>
+      <div className="flex w-full flex-col gap-1 text-center text-[13px]">
+        <p className="font-medium leading-[1.24] text-ink tnum">{value}</p>
         <p className="leading-[1.4] text-ink-dim">{label}</p>
       </div>
     </div>

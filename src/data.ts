@@ -57,6 +57,7 @@ export const GOALS: Goal[] = [
     weeklyAutoSave: 2500,
     streakWeeks: 12,
     deadline: "Dec 2026",
+    targetDate: "2026-12-15",
     squad: ["/avatars/arthur.png", "/avatars/wei.png", "/avatars/natalia.png"],
     contributions: [
       { id: "g1", source: "skip", label: "Cooked instead of ordering", amount: 320, daysAgo: 0 },
@@ -75,6 +76,7 @@ export const GOALS: Goal[] = [
     weeklyAutoSave: 3000,
     streakWeeks: 8,
     deadline: "Mar 2027",
+    targetDate: "2027-03-15",
     squad: ["/avatars/wei.png"],
     contributions: [
       { id: "i1", source: "auto", label: "Friday auto-stash", amount: 3000, daysAgo: 2 },
@@ -121,4 +123,19 @@ export function weeksToGoal(goal: Goal) {
   const remaining = Math.max(0, goal.target - goal.saved);
   if (goal.weeklyAutoSave <= 0) return Infinity;
   return Math.ceil(remaining / goal.weeklyAutoSave);
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Days until the deadline. Goals created in-app carry a `targetDate`; for an
+ * open-ended goal we fall back to the projection off the current saving rate,
+ * so the card always has something honest to show.
+ */
+export function daysToGoal(goal: Goal) {
+  if (goal.targetDate) {
+    return Math.max(0, Math.ceil((new Date(goal.targetDate).getTime() - Date.now()) / DAY_MS));
+  }
+  const weeks = weeksToGoal(goal);
+  return weeks === Infinity ? Infinity : weeks * 7;
 }
