@@ -118,11 +118,11 @@ export default function GoalDetails({
         {/* ring, then everything below it — the old "₹x to go · target ₹y"
             line is gone: the stat cards now carry both numbers */}
         <div className="flex w-full flex-col items-center gap-8">
-        <ProgressRing value={p} size={160} stroke={12} from="#b8fe50" to="#b8fe50" track="#404040">
+        <ProgressRing value={p} size={184} stroke={14} from="#b8fe50" to="#b8fe50" track="#404040">
           <span className="font-display text-[32px] font-semibold leading-[1.3] tracking-[2px] tnum">
             {Math.round(p * 100)}%
           </span>
-          <span className="text-[14px] font-medium text-ink-dim tnum">
+          <span className="text-[16px] font-medium text-ink-dim tnum">
             ₹{inrPlain(animatedSaved)}
           </span>
         </ProgressRing>

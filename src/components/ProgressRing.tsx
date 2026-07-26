@@ -57,7 +57,7 @@ export default function ProgressRing({
           style={glow ? { filter: `drop-shadow(0 0 10px ${glow})` } : undefined}
         />
       </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
         {children}
       </div>
     </div>
