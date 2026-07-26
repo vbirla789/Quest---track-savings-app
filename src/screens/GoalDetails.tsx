@@ -52,7 +52,7 @@ export default function GoalDetails({
           >
             <SysIcon src="/icons/chevron-left.svg" inset="21.88% 38.54% 21.88% 30.21%" box={20} />
           </button>
-          <span className="text-[20px] font-semibold leading-[1.3]">{goal.name}</span>
+          <span className="text-[18px] font-semibold leading-[1.3]">{goal.name}</span>
           <button
             aria-label="More options"
             className="surface-card grid size-10 place-items-center rounded-full active:scale-95"
@@ -100,7 +100,7 @@ export default function GoalDetails({
 
           {/* squad on this goal */}
           {goal.squad.length > 0 && (
-            <div className="surface-card flex items-center justify-between rounded-[16px] p-4">
+            <div className="surface-card flex items-center justify-between rounded-[24px] p-4">
               <div className="flex items-center gap-3">
                 <div className="flex">
                   {goal.squad.map((src, i) => (
@@ -134,7 +134,7 @@ export default function GoalDetails({
           <h2 className="text-[18px] font-medium leading-[1.4]">Recent stashes</h2>
           <div className="flex flex-col gap-4">
             {goal.contributions.map((c) => (
-              <div key={c.id} className="surface-card flex items-center justify-between rounded-[16px] p-4">
+              <div key={c.id} className="surface-card flex items-center justify-between rounded-[24px] p-4">
                 <div className="flex items-center gap-3">
                   <div className="grid size-9 place-items-center rounded-lg border border-elev">
                     <SysIcon src={STASH_ICONS[c.source].src} inset={STASH_ICONS[c.source].inset} />
@@ -173,7 +173,7 @@ export default function GoalDetails({
 
 function Stat({ icon, value, label }: { icon: React.ReactNode; value: string; label: string }) {
   return (
-    <div className="surface-card flex flex-1 flex-col items-center gap-1.5 rounded-[16px] p-2">
+    <div className="surface-card flex flex-1 flex-col items-center gap-1.5 rounded-[24px] p-2">
       <div className="grid size-8 place-items-center rounded-lg p-1">{icon}</div>
       <div className="flex w-full flex-col gap-1 text-center text-[13px] font-medium">
         <p className="leading-[1.24] text-ink tnum">{value}</p>

@@ -10,8 +10,8 @@ import LevelUp from "./screens/LevelUp";
 type View = "dashboard" | "details";
 type SheetKind = "quest" | "stash" | null;
 
-/* Shrink the phone to fit small viewports (mobile browsers) while keeping
-   it 1:1 on desktop. Outer phone box ≈ 400×854 + a little breathing room. */
+/* Shrink the phone to fit small desktop windows while keeping it 1:1 on a
+   roomy screen. Outer phone box ≈ 400×854 + a little breathing room. */
 function usePhoneScale() {
   const [scale, setScale] = useState(1);
   useEffect(() => {
@@ -22,6 +22,19 @@ function usePhoneScale() {
     return () => window.removeEventListener("resize", compute);
   }, []);
   return scale;
+}
+
+/* On a real phone we ditch the mockup and run edge-to-edge. */
+function useIsPhone() {
+  const [isPhone, setIsPhone] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 640px)");
+    const sync = () => setIsPhone(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+  return isPhone;
 }
 
 export default function App() {
@@ -137,11 +150,10 @@ export default function App() {
   }
 
   const scale = usePhoneScale();
+  const isPhone = useIsPhone();
 
-  return (
-    <div className="flex h-svh w-full items-center justify-center overflow-hidden">
-      <div style={{ transform: scale < 1 ? `scale(${scale})` : undefined }}>
-      <PhoneFrame>
+  const screens = (
+    <>
         <AnimatePresence mode="wait">
           {view === "dashboard" && (
             <motion.div
@@ -221,7 +233,16 @@ export default function App() {
             />
           )}
         </AnimatePresence>
-      </PhoneFrame>
+    </>
+  );
+
+  // real phone → edge-to-edge, no mockup
+  if (isPhone) return <PhoneFrame bare>{screens}</PhoneFrame>;
+
+  return (
+    <div className="flex h-svh w-full items-center justify-center overflow-hidden">
+      <div style={{ transform: scale < 1 ? `scale(${scale})` : undefined }}>
+        <PhoneFrame>{screens}</PhoneFrame>
       </div>
     </div>
   );

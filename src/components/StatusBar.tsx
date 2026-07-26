@@ -1,13 +1,22 @@
-/** Faux iOS status bar. */
-export default function StatusBar({ dark = false }: { dark?: boolean }) {
-  const c = dark ? "text-black" : "text-ink";
+/**
+ * iOS status bar, rebuilt 1:1 from the Figma header: centred notch, 17px
+ * SF-style time on the left, and the exported signal/wifi/battery glyphs on
+ * the right. 47px tall.
+ */
+export default function StatusBar() {
   return (
-    <div className={`flex items-center justify-between px-7 pt-3.5 text-[14px] font-semibold ${c}`}>
-      <span className="tnum">9:41</span>
-      <div className="flex items-center gap-1.5">
-        <span className="text-[11px]">▂▄▆</span>
-        <span className="text-[12px]">📶</span>
-        <span className="text-[12px]">🔋</span>
+    <div className="relative h-[47px] w-full overflow-hidden">
+      {/* notch */}
+      <div className="absolute left-1/2 top-[-2px] h-[32px] w-[164px] -translate-x-1/2">
+        <img src="/icons/status-notch.svg" alt="" className="block size-full" />
+      </div>
+      {/* time */}
+      <p className="absolute left-[27px] top-[15px] w-[54px] text-center text-[17px] font-semibold leading-[22px] tracking-[-0.408px] text-white tnum">
+        9:41
+      </p>
+      {/* signal · wifi · battery */}
+      <div className="absolute right-[26.6px] top-[19px] h-[13px] w-[77.4px]">
+        <img src="/icons/status-right.svg" alt="" className="block size-full" />
       </div>
     </div>
   );
