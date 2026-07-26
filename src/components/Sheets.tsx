@@ -104,7 +104,7 @@ export function NewQuestSheet({
               target === t ? "bg-lime text-black" : "bg-elev text-ink"
             }`}
           >
-            {t >= 100000 ? "₹ 1L" : `₹ ${inrPlain(t / 1000)}k`}
+            {t >= 100000 ? "₹1L" : `₹${inrPlain(t / 1000)}k`}
           </button>
         ))}
       </div>
@@ -176,7 +176,7 @@ export function StashSheet({
               amount === a ? "bg-lime text-black" : "bg-elev text-ink"
             }`}
           >
-            ₹ {inrPlain(a)}
+            ₹{inrPlain(a)}
           </button>
         ))}
       </div>

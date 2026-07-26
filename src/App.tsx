@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { GOALS, levelFromXp, type Goal } from "./data";
 import PhoneFrame from "./components/PhoneFrame";
 import { NewQuestSheet, StashSheet } from "./components/Sheets";
@@ -9,6 +9,20 @@ import LevelUp from "./screens/LevelUp";
 
 type View = "dashboard" | "details";
 type SheetKind = "quest" | "stash" | null;
+
+/* Shrink the phone to fit small viewports (mobile browsers) while keeping
+   it 1:1 on desktop. Outer phone box ≈ 400×854 + a little breathing room. */
+function usePhoneScale() {
+  const [scale, setScale] = useState(1);
+  useEffect(() => {
+    const compute = () =>
+      setScale(Math.min(1, window.innerWidth / 412, window.innerHeight / 878));
+    compute();
+    window.addEventListener("resize", compute);
+    return () => window.removeEventListener("resize", compute);
+  }, []);
+  return scale;
+}
 
 export default function App() {
   const [goals, setGoals] = useState<Goal[]>(GOALS);
@@ -90,18 +104,11 @@ export default function App() {
     setSelectedId(null);
   }
 
-  return (
-    <div className="flex min-h-svh flex-col items-center justify-center gap-8 py-10">
-      <header className="text-center">
-        <h1 className="font-display text-[26px] font-bold text-ink">
-          Quest <span className="text-ink-faint">·</span>{" "}
-          <span className="text-lime">save like a game</span>
-        </h1>
-        <p className="mt-1 text-[13px] text-ink-dim">
-          Gen Z savings concept · tap a quest → stash → hit 100% to level up
-        </p>
-      </header>
+  const scale = usePhoneScale();
 
+  return (
+    <div className="flex h-svh w-full items-center justify-center overflow-hidden">
+      <div style={{ transform: scale < 1 ? `scale(${scale})` : undefined }}>
       <PhoneFrame>
         <AnimatePresence mode="wait">
           {view === "dashboard" && (
@@ -183,12 +190,7 @@ export default function App() {
           )}
         </AnimatePresence>
       </PhoneFrame>
-
-      <p className="max-w-[390px] text-center text-[12px] leading-relaxed text-ink-faint">
-        A Gen Z savings app concept. Open <b className="text-ink-dim">Rainy day fund</b> (95%
-        there), tap <b className="text-ink-dim">Stash money</b> and add ₹2,500 to trigger the
-        level-up.
-      </p>
+      </div>
     </div>
   );
 }

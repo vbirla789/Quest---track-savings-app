@@ -3,19 +3,7 @@ import { inrPlain } from "../lib/format";
 import { useCountUp } from "../lib/useCountUp";
 import ProgressRing from "../components/ProgressRing";
 import StatusBar from "../components/StatusBar";
-
-/* System icons exported from the Figma library (committed under public/icons).
-   Each SVG is cropped to its glyph, so it renders inside a fixed box at the
-   exact inset the design uses to keep proportions faithful. */
-function SysIcon({ src, inset, box = 24 }: { src: string; inset: string; box?: number }) {
-  return (
-    <div className="relative shrink-0" style={{ width: box, height: box }}>
-      <div className="absolute" style={{ inset }}>
-        <img src={src} alt="" className="block size-full" />
-      </div>
-    </div>
-  );
-}
+import SysIcon from "../components/SysIcon";
 
 const STASH_ICONS: Record<ContributionSource, { src: string; inset: string }> = {
   skip: { src: "/icons/forward-circle.svg", inset: "9.38%" },
@@ -50,23 +38,24 @@ export default function GoalDetails({
   const remaining = Math.max(0, goal.target - goal.saved);
 
   return (
-    <div className="phone-scroll relative h-full overflow-y-auto bg-canvas pb-36">
-      <StatusBar />
+    <div className="relative h-full overflow-hidden bg-canvas">
+      <div className="phone-scroll h-full overflow-y-auto pb-36">
+        <StatusBar />
 
-      <div className="flex flex-col items-center gap-6 px-4 pt-4">
+        <div className="flex flex-col items-center gap-6 px-4 pt-4">
         {/* header */}
         <div className="flex w-full items-center justify-between">
           <button
             onClick={onBack}
             aria-label="Back"
-            className="grid size-10 place-items-center rounded-full bg-elev active:scale-95"
+            className="surface-card grid size-10 place-items-center rounded-full active:scale-95"
           >
             <SysIcon src="/icons/chevron-left.svg" inset="21.88% 38.54% 21.88% 30.21%" box={20} />
           </button>
           <span className="text-[20px] font-semibold leading-[1.3]">{goal.name}</span>
           <button
             aria-label="More options"
-            className="grid size-10 place-items-center rounded-full bg-elev active:scale-95"
+            className="surface-card grid size-10 place-items-center rounded-full active:scale-95"
           >
             <SysIcon src="/icons/three-dot.svg" inset="43.75% 18.75%" box={20} />
           </button>
@@ -79,7 +68,7 @@ export default function GoalDetails({
               {Math.round(p * 100)}%
             </span>
             <span className="text-[14px] font-medium text-ink-dim tnum">
-              ₹ {inrPlain(animatedSaved)}
+              ₹{inrPlain(animatedSaved)}
             </span>
           </ProgressRing>
           <div className="flex items-center gap-1 text-[14px] font-medium text-ink-dim tnum">
@@ -111,7 +100,7 @@ export default function GoalDetails({
 
           {/* squad on this goal */}
           {goal.squad.length > 0 && (
-            <div className="flex items-center justify-between rounded-[16px] bg-card p-4">
+            <div className="surface-card flex items-center justify-between rounded-[16px] p-4">
               <div className="flex items-center gap-3">
                 <div className="flex">
                   {goal.squad.map((src, i) => (
@@ -132,7 +121,7 @@ export default function GoalDetails({
               </div>
               <button
                 onClick={onNudgeSquad}
-                className="flex h-9 items-center justify-center rounded-full bg-elev px-4 text-[14px] font-semibold text-lime active:scale-95"
+                className="flex h-9 w-[94px] items-center justify-center rounded-full border border-white/20 backdrop-blur-[12px] text-[14px] font-semibold text-lime active:scale-95"
               >
                 Nudge 👋
               </button>
@@ -145,7 +134,7 @@ export default function GoalDetails({
           <h2 className="text-[18px] font-medium leading-[1.4]">Recent stashes</h2>
           <div className="flex flex-col gap-4">
             {goal.contributions.map((c) => (
-              <div key={c.id} className="flex items-center justify-between rounded-[20px] bg-card p-4">
+              <div key={c.id} className="surface-card flex items-center justify-between rounded-[16px] p-4">
                 <div className="flex items-center gap-3">
                   <div className="grid size-9 place-items-center rounded-lg border border-elev">
                     <SysIcon src={STASH_ICONS[c.source].src} inset={STASH_ICONS[c.source].inset} />
@@ -162,15 +151,17 @@ export default function GoalDetails({
             ))}
           </div>
         </div>
+        </div>
       </div>
 
       {/* sticky footer — single primary CTA over a bottom fade */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40 bg-gradient-to-b from-transparent to-black to-60% px-4 pb-8 pt-3">
         <button
           onClick={onStashMoney}
-          className="pointer-events-auto h-12 w-full rounded-full bg-lime text-[16px] font-semibold text-black active:scale-[0.98]"
+          className="pointer-events-auto flex h-12 w-full items-center justify-center gap-2 rounded-full bg-lime text-[16px] font-semibold text-black active:scale-[0.98]"
         >
-          Stash money
+          <SysIcon src="/icons/note-round-black.svg" inset="19.45% 6.78%" box={20} />
+          Add money
         </button>
         <div className="absolute inset-x-0 bottom-0 flex justify-center pb-2 pt-3">
           <div className="h-[5px] w-[124px] rounded-lg bg-white" />
@@ -182,8 +173,8 @@ export default function GoalDetails({
 
 function Stat({ icon, value, label }: { icon: React.ReactNode; value: string; label: string }) {
   return (
-    <div className="flex flex-1 flex-col items-center gap-1.5 rounded-[16px] bg-card p-2 pt-3">
-      {icon}
+    <div className="surface-card flex flex-1 flex-col items-center gap-1.5 rounded-[16px] p-2">
+      <div className="grid size-8 place-items-center rounded-lg p-1">{icon}</div>
       <div className="flex w-full flex-col gap-1 text-center text-[13px] font-medium">
         <p className="leading-[1.24] text-ink tnum">{value}</p>
         <p className="leading-[1.4] text-ink-dim">{label}</p>

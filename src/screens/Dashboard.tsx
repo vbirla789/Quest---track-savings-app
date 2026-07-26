@@ -1,8 +1,18 @@
 import { motion } from "framer-motion";
 import { FRIENDS, levelFromXp, type Goal } from "../data";
-import { inr, inrPlain } from "../lib/format";
+import { inrPlain } from "../lib/format";
 import { useCountUp } from "../lib/useCountUp";
 import StatusBar from "../components/StatusBar";
+import SysIcon from "../components/SysIcon";
+
+/* Refracted-glass texture on the hero: thin vertical gradient stripes,
+   brighter through the middle band, overlay-blended at low opacity. */
+const STRIPE_W = 14.11;
+const STRIPES = Array.from({ length: 40 }, (_, i) => {
+  const left = i * STRIPE_W;
+  const bright = left >= 156 && left < 397;
+  return { left, alpha: bright ? 0.8 : 0.3 };
+});
 
 export default function Dashboard({
   goals,
@@ -22,110 +32,161 @@ export default function Dashboard({
   const animatedTotal = useCountUp(totalSaved);
 
   return (
-    <div className="phone-scroll h-full overflow-y-auto bg-canvas pb-10">
-      <StatusBar />
+    <div className="relative h-full overflow-hidden bg-canvas">
+      <div className="phone-scroll h-full overflow-y-auto pb-12">
+        <StatusBar />
 
-      <div className="flex flex-col gap-6 px-4 pt-4">
-        {/* header */}
-        <div className="flex items-center justify-between">
-          <h1 className="font-display text-[24px] font-semibold leading-[1.3]">Overview</h1>
-          <div className="size-9 overflow-hidden rounded-full bg-[#e1e4ea]">
-            <img src="/avatars/james.png" alt="" className="size-full object-cover" />
+        <div className="flex flex-col gap-5 px-4 pt-4">
+          {/* header */}
+          <div className="flex items-center justify-between">
+            <button
+              aria-label="Profile"
+              className="surface-card grid size-10 place-items-center rounded-full active:scale-95"
+            >
+              <SysIcon src="/icons/user-circle.svg" inset="9.38%" box={20} />
+            </button>
+            <h1 className="font-display text-[18px] font-semibold leading-[1.3]">Overview</h1>
+            <button
+              aria-label="Notifications"
+              className="surface-card grid size-10 place-items-center rounded-full active:scale-95"
+            >
+              <SysIcon src="/icons/notification.svg" inset="13.54% 17.71% 12.5% 17.71%" box={20} />
+            </button>
           </div>
-        </div>
 
-        {/* hero — total stashed on the lime surface */}
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ type: "spring", stiffness: 120, damping: 18 }}
-          className="flex flex-col gap-4 rounded-[24px] bg-lime px-4 pb-5 pt-4"
-        >
-          <div className="flex flex-col gap-2">
-            <p className="text-[14px] font-medium leading-[1.4] text-lime-dim">Total stashed</p>
-            <p className="font-display text-[32px] font-bold leading-[1.3] text-black tnum">
-              ₹ {inrPlain(animatedTotal)}
-            </p>
-          </div>
-          <div className="flex flex-col gap-2.5">
-            <div className="flex items-center gap-2 text-[14px] leading-[1.4]">
-              <span className="flex-1 font-medium text-lime-dim">XP to Level {level + 1}</span>
-              <span className="flex items-center gap-1">
-                <span className="font-semibold text-black tnum">₹ {inrPlain(into)}</span>
-                <span className="font-medium text-lime-dim tnum">/ {inrPlain(toNext)}</span>
-              </span>
-            </div>
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-white">
-              <motion.div
-                className="h-full rounded-full bg-black"
-                initial={{ width: 0 }}
-                animate={{ width: `${pct * 100}%` }}
-                transition={{ type: "spring", stiffness: 80, damping: 18, delay: 0.15 }}
-              />
-            </div>
-          </div>
-        </motion.div>
-
-        {/* action bar */}
-        <div className="flex items-center gap-3">
-          <button
-            onClick={onNewQuest}
-            className="h-12 flex-1 rounded-full bg-elev text-[16px] font-semibold text-lime active:scale-[0.98]"
-          >
-            New quest
-          </button>
-          <button
-            onClick={onStashCash}
-            className="h-12 flex-1 rounded-full bg-elev text-[16px] font-semibold text-lime active:scale-[0.98]"
-          >
-            Stash cash
-          </button>
-        </div>
-
-        {/* goal buckets */}
-        <div className="flex flex-col gap-3">
-          <h2 className="text-[18px] font-medium leading-[1.4]">Your quests</h2>
-          <div className="flex flex-col gap-4">
-            {goals.map((g, i) => (
-              <GoalCard key={g.id} goal={g} index={i} onOpen={() => onOpenGoal(g.id)} />
-            ))}
-          </div>
-        </div>
-
-        {/* social loop */}
-        <div className="flex flex-col gap-3">
-          <h2 className="text-[18px] font-medium leading-[1.4]">Saving squad</h2>
-          <div className="flex flex-col gap-4">
-            {FRIENDS.map((f) => (
-              <div key={f.id} className="flex items-center justify-between rounded-[16px] bg-card p-4">
-                <div className="flex items-center gap-3">
+          <div className="flex flex-col gap-6">
+            {/* hero — total stashed on the refracted-glass green surface */}
+            <motion.div
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ type: "spring", stiffness: 120, damping: 18 }}
+              className="relative flex flex-col gap-6 overflow-hidden rounded-[28px] border border-white bg-gradient-to-b from-[#5dba3b] to-[#79b238] px-4 pb-5 pt-4"
+            >
+              {/* texture */}
+              <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                <div className="absolute left-[148px] top-[147px] size-[190px]">
+                  <img
+                    src="/hero-glow.svg"
+                    alt=""
+                    className="absolute block max-w-none"
+                    style={{ inset: "-34.66%", width: "169.32%", height: "169.32%" }}
+                  />
+                </div>
+                {STRIPES.map((s, i) => (
                   <div
-                    className="size-10 overflow-hidden rounded-full"
-                    style={{ backgroundColor: f.avatarBg }}
-                  >
-                    <img src={f.avatar} alt="" className="size-full object-cover" />
+                    key={i}
+                    className="absolute top-[calc(50%+2.24px)] h-[264px] -translate-y-1/2 opacity-[0.12] mix-blend-overlay"
+                    style={{
+                      left: s.left,
+                      width: STRIPE_W,
+                      background: `linear-gradient(to right, rgba(255,255,255,0), rgba(184,254,80,${s.alpha}) 81.25%, rgba(255,255,255,${s.alpha}))`,
+                    }}
+                  />
+                ))}
+              </div>
+
+              <div className="relative flex flex-col gap-4">
+                <div className="flex flex-col gap-2">
+                  <p className="text-[14px] font-medium leading-[1.4] text-[#e0e0e0]">
+                    Total stashed
+                  </p>
+                  <p className="font-display text-[32px] font-bold leading-[1.3] text-white tnum">
+                    ₹{inrPlain(animatedTotal)}
+                  </p>
+                </div>
+                <div className="flex flex-col gap-2.5">
+                  <div className="flex items-center gap-2 text-[14px] leading-[1.4]">
+                    <span className="flex-1 font-medium text-[#e0e0e0]">
+                      XP to level {level + 1}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="font-semibold text-white tnum">₹{inrPlain(into)}</span>
+                      <span className="font-medium text-[#e0e0e0] tnum">/ {inrPlain(toNext)}</span>
+                    </span>
                   </div>
-                  <div className="flex flex-col">
-                    <p className="text-[16px] font-medium leading-[1.24]">{f.name}</p>
-                    <p className="text-[14px] font-medium leading-[1.4] text-ink-dim">
-                      {f.goal}, {Math.round(f.progress * 100)}%
-                    </p>
+                  <div className="glass h-1.5 w-full overflow-hidden rounded-full">
+                    <motion.div
+                      className="h-full rounded-full"
+                      style={{
+                        backgroundImage: "url(/hero-xp-fill.png)",
+                        backgroundSize: "cover",
+                      }}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${pct * 100}%` }}
+                      transition={{ type: "spring", stiffness: 80, damping: 18, delay: 0.15 }}
+                    />
                   </div>
                 </div>
+              </div>
+
+              {/* action bar — glass pills inside the hero */}
+              <div className="relative flex items-center gap-3">
                 <button
-                  onClick={() => onNudge(f.name)}
-                  className="flex h-9 w-[102px] items-center justify-center rounded-full bg-elev text-[14px] font-semibold text-lime active:scale-95"
+                  onClick={onNewQuest}
+                  className="glass flex h-[42px] flex-1 items-center justify-center gap-2 rounded-full text-[14px] font-semibold text-white active:scale-[0.98]"
                 >
-                  Nudge 👋
+                  <SysIcon src="/icons/plus-circle.svg" inset="9.38%" box={18} />
+                  New quest
+                </button>
+                <button
+                  onClick={onStashCash}
+                  className="glass flex h-[42px] flex-1 items-center justify-center gap-2 rounded-full text-[14px] font-semibold text-white active:scale-[0.98]"
+                >
+                  <SysIcon src="/icons/note-round-white.svg" inset="19.45% 6.78%" box={18} />
+                  Add money
                 </button>
               </div>
-            ))}
+            </motion.div>
+
+            {/* goal buckets */}
+            <div className="flex flex-col gap-3">
+              <h2 className="text-[18px] font-medium leading-[1.4]">Your quests</h2>
+              <div className="flex flex-col gap-4">
+                {goals.map((g, i) => (
+                  <GoalCard key={g.id} goal={g} index={i} onOpen={() => onOpenGoal(g.id)} />
+                ))}
+              </div>
+            </div>
+
+            {/* social loop */}
+            <div className="flex flex-col gap-3">
+              <h2 className="text-[18px] font-medium leading-[1.4]">Saving squad</h2>
+              <div className="flex flex-col gap-4">
+                {FRIENDS.map((f) => (
+                  <div
+                    key={f.id}
+                    className="surface-card flex items-center justify-between rounded-[16px] p-4"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="size-9 overflow-hidden rounded-full"
+                        style={{ backgroundColor: f.avatarBg }}
+                      >
+                        <img src={f.avatar} alt="" className="size-full object-cover" />
+                      </div>
+                      <div className="flex flex-col">
+                        <p className="text-[16px] font-medium leading-[1.24]">{f.name}</p>
+                        <p className="text-[14px] leading-[1.4] text-ink-dim">
+                          {f.goal}, {Math.round(f.progress * 100)}%
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => onNudge(f.name)}
+                      className="flex h-9 w-[94px] items-center justify-center rounded-full border border-white/20 backdrop-blur-[12px] text-[14px] font-semibold text-lime active:scale-95"
+                    >
+                      Nudge 👋
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* iOS home bar */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center pb-2 pt-3">
+      {/* iOS home bar — pinned to the phone, not the scroll content */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40 flex justify-center pb-2 pt-3">
         <div className="h-[5px] w-[124px] rounded-lg bg-white" />
       </div>
     </div>
@@ -151,15 +212,15 @@ function GoalCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: "spring", stiffness: 140, damping: 18, delay: index * 0.06 }}
       whileTap={{ scale: 0.98 }}
-      className="flex flex-col gap-6 rounded-[20px] bg-card p-4 text-left"
+      className="surface-card flex flex-col gap-6 rounded-[20px] p-4 text-left"
     >
       <div className="flex w-full items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="grid size-9 place-items-center rounded-lg border border-elev text-[22px]">
             {goal.emoji}
           </div>
-          <div className="flex flex-col text-[14px] font-medium">
-            <p className="leading-[1.24]">{goal.name}</p>
+          <div className="flex flex-col text-[14px]">
+            <p className="font-medium leading-[1.24]">{goal.name}</p>
             <p className="leading-[1.4] text-ink-dim">{goal.streakWeeks} week streak</p>
           </div>
         </div>
@@ -168,7 +229,7 @@ function GoalCard({
             {goal.squad.map((src, i) => (
               <div
                 key={i}
-                className="-mr-3 size-8 overflow-hidden rounded-full bg-[#e1e4ea] last:mr-0 ring-2 ring-card"
+                className="-mr-2 size-7 overflow-hidden rounded-full bg-[#e1e4ea] last:mr-0"
               >
                 <img src={src} alt="" className="size-full object-cover" />
               </div>
@@ -180,14 +241,14 @@ function GoalCard({
       <div className="flex w-full flex-col gap-3">
         <div className="flex items-center justify-between text-[14px] leading-[1.4]">
           <p className="flex items-center gap-1">
-            <span className="font-semibold text-ink tnum">{inr(goal.saved)}</span>
+            <span className="font-semibold text-ink tnum">₹{inrPlain(goal.saved)}</span>
             <span className="font-medium text-ink-dim tnum">/ {inrPlain(goal.target)}</span>
           </p>
           <span className="font-medium text-lime tnum">{Math.round(p * 100)}%</span>
         </div>
         <div className="h-1.5 w-full overflow-hidden rounded-full bg-track">
           <motion.div
-            className="h-full rounded-full bg-lime"
+            className="h-full rounded-full bg-gradient-to-b from-lime to-[#6e9830]"
             initial={{ width: 0 }}
             animate={{ width: `${p * 100}%` }}
             transition={{ type: "spring", stiffness: 90, damping: 20, delay: 0.2 + index * 0.06 }}

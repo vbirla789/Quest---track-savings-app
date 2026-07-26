@@ -4,9 +4,9 @@ const inr0 = new Intl.NumberFormat("en-IN", {
   maximumFractionDigits: 0,
 });
 
-/** ₹ 80,000 — Indian digit grouping, no paise, space after the symbol (per design). */
+/** ₹80,000 — Indian digit grouping, no paise, no space after the symbol (per design). */
 export function inr(n: number) {
-  return inr0.format(Math.round(n)).replace("₹", "₹ ");
+  return inr0.format(Math.round(n));
 }
 
 /** 80,000 without the symbol, for when we render ₹ separately at a big size. */
