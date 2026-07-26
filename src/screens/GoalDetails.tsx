@@ -186,7 +186,7 @@ export default function GoalDetails({
               </div>
               <button
                 onClick={onNudgeSquad}
-                className="flex h-9 items-center justify-center rounded-full bg-elev px-4 text-[14px] font-semibold text-lime active:scale-95"
+                className="flex h-9 items-center justify-center rounded-full border border-white/20 px-4 backdrop-blur-[12px] text-[14px] font-semibold text-lime active:scale-95"
               >
                 Nudge 👋
               </button>
