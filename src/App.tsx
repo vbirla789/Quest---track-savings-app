@@ -1,6 +1,12 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { GOALS, levelFromXp, type Contribution, type Goal } from "./data";
+import {
+  GOALS,
+  levelFromXp,
+  type Contribution,
+  type ContributionSource,
+  type Goal,
+} from "./data";
 import PhoneFrame from "./components/PhoneFrame";
 import { NewQuestSheet, StashSheet } from "./components/Sheets";
 import Dashboard from "./screens/Dashboard";
@@ -52,7 +58,11 @@ export default function App() {
     setView("details");
   }
 
-  function addToGoal(id: string, amount: number, category?: string) {
+  function addToGoal(
+    id: string,
+    amount: number,
+    category?: { label: string; source: ContributionSource },
+  ) {
     if (amount <= 0) return;
     const goal = goals.find((g) => g.id === id);
     if (!goal) return;
@@ -65,10 +75,10 @@ export default function App() {
     // "Recent stashes" rather than being invisible.
     const entry: Contribution = {
       id: `${id}-${Date.now()}`,
-      source: "boost",
-      // the category is what makes the ledger scannable — fall back only if
-      // a stash somehow arrives untagged
-      label: category || "Manual boost",
+      // the category decides both the row label and its icon — fall back only
+      // if a stash somehow arrives untagged
+      source: category?.source ?? "boost",
+      label: category?.label || "Manual boost",
       amount,
       daysAgo: 0,
     };
@@ -177,7 +187,11 @@ export default function App() {
     setTimeout(() => setToast(null), 2200);
   }
 
-  function stashCash(goalId: string, amount: number, category: string) {
+  function stashCash(
+    goalId: string,
+    amount: number,
+    category: { label: string; source: ContributionSource },
+  ) {
     setSheet(null);
     addToGoal(goalId, amount, category);
     const g = goals.find((x) => x.id === goalId);

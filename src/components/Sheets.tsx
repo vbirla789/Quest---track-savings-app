@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import type { Goal } from "../data";
+import type { ContributionSource, Goal } from "../data";
 import { inrPlain } from "../lib/format";
 import { DateWheel, Keyboard } from "./Keyboard";
 
@@ -304,15 +304,21 @@ export function NewQuestSheet({
 
 const AMOUNT_CHIPS = [500, 1000, 2500];
 
-/* What the money came from. Tagging the stash is what makes the ledger
-   readable later — "Cab" beats a wall of identical "Manual boost" rows. */
-const CATEGORIES = [
-  { id: "cab", label: "Cab", icon: "🚕" },
-  { id: "sutta", label: "Sutta", icon: "🚬" },
-  { id: "groceries", label: "Groceries", icon: "🛒" },
-  { id: "outing", label: "Outing", icon: "🎉" },
-  { id: "rent", label: "Rent", icon: "🏠" },
-  { id: "others", label: "Others", icon: "💬" },
+/* How the money was saved — not what it would have been spent on. Each one
+   carries the contribution source it maps to, so the ledger row gets the right
+   icon instead of stamping every manual stash as a boost. */
+const CATEGORIES: {
+  id: string;
+  label: string;
+  icon: string;
+  source: ContributionSource;
+}[] = [
+  { id: "cooked", label: "Cooked in", icon: "🍜", source: "skip" },
+  { id: "cab", label: "Skipped cab", icon: "🚕", source: "skip" },
+  { id: "roundup", label: "Round-ups", icon: "🪙", source: "roundup" },
+  { id: "cashback", label: "Cashback", icon: "🎁", source: "boost" },
+  { id: "bonus", label: "Bonus", icon: "⚡", source: "boost" },
+  { id: "others", label: "Others", icon: "💬", source: "boost" },
 ];
 
 export function StashSheet({
@@ -324,7 +330,11 @@ export function StashSheet({
   goals: Goal[];
   defaultGoalId?: string;
   onClose: () => void;
-  onStash: (goalId: string, amount: number, category: string) => void;
+  onStash: (
+    goalId: string,
+    amount: number,
+    category: { label: string; source: ContributionSource },
+  ) => void;
 }) {
   const active = goals.filter((g) => g.saved < g.target);
   const presetId =
@@ -340,9 +350,8 @@ export function StashSheet({
   const value = Number(amount) || 0;
   const goal = active.find((g) => g.id === goalId);
   const isOther = category === "others";
-  const categoryLabel = isOther
-    ? customCategory.trim()
-    : (CATEGORIES.find((c) => c.id === category)?.label ?? "");
+  const picked = CATEGORIES.find((c) => c.id === category);
+  const categoryLabel = isOther ? customCategory.trim() : (picked?.label ?? "");
 
   const steps = [
     {
@@ -411,7 +420,7 @@ export function StashSheet({
     },
     {
       label: "Category",
-      helper: "Tag where this money came from",
+      helper: "How did you save this money?",
       cta: value > 0 ? `Add ₹${inrPlain(value)}` : "Add money",
       valid: categoryLabel !== "",
       // only the free-text "Others" name needs a keyboard
@@ -468,7 +477,7 @@ export function StashSheet({
       setStep(step + 1);
       return;
     }
-    onStash(goalId, value, categoryLabel);
+    onStash(goalId, value, { label: categoryLabel, source: picked?.source ?? "boost" });
   }
 
   return (
