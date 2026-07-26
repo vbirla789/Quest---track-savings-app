@@ -248,7 +248,7 @@ function Stat({ icon, value, label }: { icon: React.ReactNode; value: string; la
   return (
     <div className="surface-card flex flex-1 flex-col items-center gap-1.5 rounded-[24px] p-2">
       <div className="grid size-8 place-items-center rounded-lg p-1">{icon}</div>
-      <div className="flex w-full flex-col gap-1 text-center text-[13px]">
+      <div className="flex w-full flex-col gap-1 text-center text-[14px]">
         <p className="font-medium leading-[1.24] text-ink tnum">{value}</p>
         <p className="leading-[1.4] text-ink-dim">{label}</p>
       </div>
