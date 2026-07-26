@@ -52,7 +52,7 @@ export default function App() {
     setView("details");
   }
 
-  function addToGoal(id: string, amount: number) {
+  function addToGoal(id: string, amount: number, category?: string) {
     if (amount <= 0) return;
     const goal = goals.find((g) => g.id === id);
     if (!goal) return;
@@ -66,7 +66,9 @@ export default function App() {
     const entry: Contribution = {
       id: `${id}-${Date.now()}`,
       source: "boost",
-      label: "Manual boost",
+      // the category is what makes the ledger scannable — fall back only if
+      // a stash somehow arrives untagged
+      label: category || "Manual boost",
       amount,
       daysAgo: 0,
     };
@@ -175,9 +177,9 @@ export default function App() {
     setTimeout(() => setToast(null), 2200);
   }
 
-  function stashCash(goalId: string, amount: number) {
+  function stashCash(goalId: string, amount: number, category: string) {
     setSheet(null);
-    addToGoal(goalId, amount);
+    addToGoal(goalId, amount, category);
     const g = goals.find((x) => x.id === goalId);
     const completes = g && g.saved + amount >= g.target;
     if (!completes) {

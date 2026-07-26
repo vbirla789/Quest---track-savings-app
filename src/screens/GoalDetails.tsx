@@ -195,10 +195,9 @@ export default function GoalDetails({
           <h2 className="text-[18px] font-medium leading-[1.4]">Recent stashes</h2>
           <div className="flex flex-col gap-4">
             {goal.contributions.length === 0 && (
-              <div className="surface-card flex flex-col items-center gap-1 rounded-[24px] px-4 py-7 text-center">
-                <span className="text-[22px]">🪄</span>
-                <p className="mt-1 text-[14px] font-medium text-ink">No stashes yet</p>
-                <p className="text-[13px] leading-[1.4] text-ink-dim">
+              <div className="flex flex-col items-center gap-1 px-4 py-6 text-center">
+                <p className="text-[14px] font-medium text-ink">No stashes yet</p>
+                <p className="text-[14px] leading-[1.4] text-ink-dim">
                   Add your first bit of money and watch this quest come alive.
                 </p>
               </div>

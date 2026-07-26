@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { Goal } from "../data";
 import { inrPlain } from "../lib/format";
 import { DateWheel, Keyboard } from "./Keyboard";
@@ -36,7 +36,48 @@ const SHEET_V = {
 };
 
 const FIELD =
-  "w-full rounded-[16px] bg-elev p-4 text-[14px] font-medium leading-[1.4] text-white outline-none placeholder:font-normal placeholder:text-ink-dim";
+  "w-full rounded-[16px] bg-elev p-4 text-[14px] font-medium leading-[1.4] text-white caret-lime outline-none placeholder:font-normal placeholder:text-ink-dim";
+
+/**
+ * Sheet text field.
+ *
+ * `inputMode="none"` suppresses the phone's on-screen keyboard — ours is the
+ * touch input surface — but the field stays a real editable input, so a laptop
+ * keyboard types into it normally and the caret is visible. It focuses itself
+ * once the sheet has settled, with preventScroll so the browser doesn't yank
+ * the field into view mid-animation.
+ */
+function Field({
+  value,
+  onChange,
+  placeholder,
+  numeric = false,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+  numeric?: boolean;
+}) {
+  const ref = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const t = setTimeout(() => ref.current?.focus({ preventScroll: true }), 300);
+    return () => clearTimeout(t);
+  }, []);
+
+  return (
+    <input
+      ref={ref}
+      inputMode="none"
+      value={value}
+      onChange={(e) =>
+        onChange(numeric ? e.target.value.replace(/\D/g, "").slice(0, 9) : e.target.value)
+      }
+      placeholder={placeholder}
+      className={numeric ? `${FIELD} tnum` : FIELD}
+    />
+  );
+}
 
 function SheetShell({
   step,
@@ -183,17 +224,7 @@ export function NewQuestSheet({
       cta: "Continue",
       valid: name.trim().length > 0,
       field: (
-        <input
-          // no autoFocus: on a phone, focusing a field inside a sheet that has
-          // just animated up makes the browser scroll it into view and jolts
-          // the layout — and the on-screen keyboard below is the input surface
-          // anyway, so focus buys nothing
-          readOnly
-          inputMode="none"
-          value={name}
-          placeholder="eg. Ladakh ride"
-          className={FIELD}
-        />
+        <Field value={name} onChange={setName} placeholder="eg. Ladakh ride" />
       ),
       accessory: (
         <Keyboard
@@ -210,12 +241,11 @@ export function NewQuestSheet({
       cta: "Continue",
       valid: target > 0,
       field: (
-        <input
-          readOnly
-          inputMode="numeric"
+        <Field
           value={amount ? `₹${inrPlain(target)}` : ""}
+          onChange={setAmount}
           placeholder="₹50,000"
-          className={`${FIELD} tnum`}
+          numeric
         />
       ),
       accessory: (
@@ -274,6 +304,17 @@ export function NewQuestSheet({
 
 const AMOUNT_CHIPS = [500, 1000, 2500];
 
+/* What the money came from. Tagging the stash is what makes the ledger
+   readable later — "Cab" beats a wall of identical "Manual boost" rows. */
+const CATEGORIES = [
+  { id: "cab", label: "Cab", icon: "🚕" },
+  { id: "sutta", label: "Sutta", icon: "🚬" },
+  { id: "groceries", label: "Groceries", icon: "🛒" },
+  { id: "outing", label: "Outing", icon: "🎉" },
+  { id: "rent", label: "Rent", icon: "🏠" },
+  { id: "others", label: "Others", icon: "💬" },
+];
+
 export function StashSheet({
   goals,
   defaultGoalId,
@@ -283,7 +324,7 @@ export function StashSheet({
   goals: Goal[];
   defaultGoalId?: string;
   onClose: () => void;
-  onStash: (goalId: string, amount: number) => void;
+  onStash: (goalId: string, amount: number, category: string) => void;
 }) {
   const active = goals.filter((g) => g.saved < g.target);
   const presetId =
@@ -293,9 +334,15 @@ export function StashSheet({
   const [step, setStep] = useState(presetId ? 1 : 0);
   const [goalId, setGoalId] = useState(presetId || active[0]?.id || "");
   const [amount, setAmount] = useState("");
+  const [category, setCategory] = useState("");
+  const [customCategory, setCustomCategory] = useState("");
 
   const value = Number(amount) || 0;
   const goal = active.find((g) => g.id === goalId);
+  const isOther = category === "others";
+  const categoryLabel = isOther
+    ? customCategory.trim()
+    : (CATEGORIES.find((c) => c.id === category)?.label ?? "");
 
   const steps = [
     {
@@ -329,7 +376,7 @@ export function StashSheet({
     {
       label: "How much?",
       helper: goal ? `Adding to ${goal.name}` : "Enter an amount to stash",
-      cta: value > 0 ? `Add ${`₹${inrPlain(value)}`}` : "Add money",
+      cta: "Continue",
       valid: value > 0,
       accessory: (
         <Keyboard
@@ -340,12 +387,11 @@ export function StashSheet({
       ),
       field: (
         <div className="flex flex-col gap-3">
-          <input
-            readOnly
-            inputMode="numeric"
+          <Field
             value={amount ? `₹${inrPlain(value)}` : ""}
+            onChange={setAmount}
             placeholder="₹2,500"
-            className={`${FIELD} tnum`}
+            numeric
           />
           <div className="flex gap-2">
             {AMOUNT_CHIPS.map((a) => (
@@ -363,17 +409,66 @@ export function StashSheet({
         </div>
       ),
     },
+    {
+      label: "Category",
+      helper: "Tag where this money came from",
+      cta: value > 0 ? `Add ₹${inrPlain(value)}` : "Add money",
+      valid: categoryLabel !== "",
+      // only the free-text "Others" name needs a keyboard
+      accessory: isOther ? (
+        <Keyboard
+          variant="qwerty"
+          onKey={(ch) => setCustomCategory((n) => n + ch)}
+          onBackspace={() => setCustomCategory((n) => n.slice(0, -1))}
+          doneLabel="done"
+          onDone={() => undefined}
+        />
+      ) : undefined,
+      field: (
+        <div className="phone-scroll flex max-h-[184px] flex-col gap-3 overflow-y-auto">
+          <div className="grid grid-cols-2 gap-2">
+            {CATEGORIES.map((c) => {
+              const selected = category === c.id;
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => setCategory(c.id)}
+                  className={`flex h-10 items-center justify-center gap-2 rounded-full border text-[14px] font-medium transition-colors ${
+                    selected
+                      ? "border-lime bg-lime/15 text-lime"
+                      : "border-transparent bg-elev text-ink"
+                  }`}
+                >
+                  <span className="text-[15px]">{c.icon}</span>
+                  {c.label}
+                </button>
+              );
+            })}
+          </div>
+          {isOther && (
+            <div className="flex flex-col gap-2">
+              <p className="text-[13px] text-ink-dim">Name this category</p>
+              <Field
+                value={customCategory}
+                onChange={setCustomCategory}
+                placeholder="e.g. Doctor, Gift…"
+              />
+            </div>
+          )}
+        </div>
+      ),
+    },
   ];
 
   const current = steps[step];
 
   function advance() {
     if (!current.valid) return;
-    if (step === 0) {
-      setStep(1);
+    if (step < steps.length - 1) {
+      setStep(step + 1);
       return;
     }
-    onStash(goalId, value);
+    onStash(goalId, value, categoryLabel);
   }
 
   return (
