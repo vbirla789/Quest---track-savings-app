@@ -115,23 +115,19 @@ export default function GoalDetails({
           </div>
         </div>
 
-        {/* progress ring */}
-        <div className="flex flex-col items-center gap-4">
-          <ProgressRing value={p} size={160} stroke={12} from="#b8fe50" to="#b8fe50" track="#404040">
-            <span className="font-display text-[32px] font-semibold leading-[1.3] tracking-[2px] tnum">
-              {Math.round(p * 100)}%
-            </span>
-            <span className="text-[14px] font-medium text-ink-dim tnum">
-              ₹{inrPlain(animatedSaved)}
-            </span>
-          </ProgressRing>
-          <div className="flex items-center gap-1 text-[14px] font-medium text-ink-dim tnum">
-            <span>₹{inrPlain(remaining)} to go</span>
-            <span className="size-[3px] rounded-full bg-ink-dim" />
-            <span>target ₹{inrPlain(goal.target)}</span>
-          </div>
-        </div>
+        {/* ring, then everything below it — the old "₹x to go · target ₹y"
+            line is gone: the stat cards now carry both numbers */}
+        <div className="flex w-full flex-col items-center gap-8">
+        <ProgressRing value={p} size={160} stroke={12} from="#b8fe50" to="#b8fe50" track="#404040">
+          <span className="font-display text-[32px] font-semibold leading-[1.3] tracking-[2px] tnum">
+            {Math.round(p * 100)}%
+          </span>
+          <span className="text-[14px] font-medium text-ink-dim tnum">
+            ₹{inrPlain(animatedSaved)}
+          </span>
+        </ProgressRing>
 
+        <div className="flex w-full flex-col gap-6">
         <div className="flex w-full flex-col gap-5">
           {/* stat trio — icons are global, identical across every goal */}
           <div className="flex items-start gap-3">
@@ -163,7 +159,7 @@ export default function GoalDetails({
 
           {/* squad on this goal */}
           {goal.squad.length > 0 && (
-            <div className="surface-card flex items-center justify-between rounded-[16px] p-4">
+            <div className="surface-card flex items-center justify-between rounded-[24px] p-4">
               <div className="flex items-center gap-3">
                 <div className="flex">
                   {goal.squad.map((src, i) => (
@@ -186,7 +182,7 @@ export default function GoalDetails({
               </div>
               <button
                 onClick={onNudgeSquad}
-                className="flex h-9 items-center justify-center rounded-full border border-white/20 px-4 backdrop-blur-[12px] text-[14px] font-semibold text-lime active:scale-95"
+                className="flex h-9 w-[94px] items-center justify-center rounded-full border border-white/20 backdrop-blur-[12px] text-[14px] font-semibold text-lime active:scale-95"
               >
                 Nudge 👋
               </button>
@@ -208,7 +204,7 @@ export default function GoalDetails({
               </div>
             )}
             {goal.contributions.map((c) => (
-              <div key={c.id} className="surface-card flex items-center justify-between rounded-[16px] p-4">
+              <div key={c.id} className="surface-card flex items-center justify-between rounded-[24px] p-4">
                 <div className="flex items-center gap-3">
                   <div className="grid size-9 place-items-center rounded-lg border border-elev">
                     <SysIcon src={STASH_ICONS[c.source].src} inset={STASH_ICONS[c.source].inset} />
@@ -224,6 +220,8 @@ export default function GoalDetails({
               </div>
             ))}
           </div>
+        </div>
+        </div>
         </div>
         </div>
       </div>
