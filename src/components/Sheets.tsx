@@ -175,26 +175,6 @@ function SheetShell({
 
 /* ------------------------------- New quest ------------------------------- */
 
-/** Pick an icon from the goal's name so we don't need to ask a fourth question. */
-const EMOJI_HINTS: [RegExp, string][] = [
-  [/trip|travel|vacation|holiday|goa|ladakh|europe/i, "🏖️"],
-  [/iphone|phone|pixel|samsung/i, "📱"],
-  [/macbook|laptop|pc|desktop/i, "💻"],
-  [/bike|scooter|cycle|ride/i, "🛵"],
-  [/car/i, "🚗"],
-  [/game|ps5|xbox|console/i, "🎮"],
-  [/rainy|emergency|safety/i, "🛟"],
-  [/camera|lens/i, "📷"],
-  [/headphone|airpod|earbud/i, "🎧"],
-  [/wedding|shaadi/i, "💍"],
-  [/course|college|fees|study/i, "🎓"],
-];
-
-function guessEmoji(name: string) {
-  for (const [re, emoji] of EMOJI_HINTS) if (re.test(name)) return emoji;
-  return "🎯";
-}
-
 function sixMonthsOut() {
   const d = new Date();
   d.setMonth(d.getMonth() + 6);
@@ -208,7 +188,7 @@ export function NewQuestSheet({
   onSubmit,
 }: {
   onClose: () => void;
-  onSubmit: (input: { name: string; emoji: string; target: number; targetDate: string }) => void;
+  onSubmit: (input: { name: string; target: number; targetDate: string }) => void;
 }) {
   const [step, setStep] = useState(0);
   const [name, setName] = useState("");
@@ -279,7 +259,7 @@ export function NewQuestSheet({
       setStep(step + 1);
       return;
     }
-    onSubmit({ name: name.trim(), emoji: guessEmoji(name), target, targetDate: date });
+    onSubmit({ name: name.trim(), target, targetDate: date });
   }
 
   return (
@@ -358,10 +338,7 @@ export function StashSheet({
             }`}
           >
             {chosen ? (
-              <>
-                <span className="text-[20px] leading-none">{chosen.emoji}</span>
-                <span className="flex-1 text-[14px] font-medium text-white">{chosen.name}</span>
-              </>
+              <span className="flex-1 text-[14px] font-medium text-white">{chosen.name}</span>
             ) : (
               <span className="flex-1 text-[14px] text-ink-dim">Select a quest</span>
             )}
@@ -399,7 +376,6 @@ export function StashSheet({
                           selected ? "bg-lime/15" : "active:bg-white/8"
                         }`}
                       >
-                        <span className="text-[20px] leading-none">{g.emoji}</span>
                         <span
                           className={`flex-1 text-[14px] font-medium ${
                             selected ? "text-lime" : "text-ink"

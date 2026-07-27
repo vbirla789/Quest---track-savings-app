@@ -107,12 +107,10 @@ export default function App() {
 
   function createQuest({
     name,
-    emoji,
     target,
     targetDate,
   }: {
     name: string;
-    emoji: string;
     target: number;
     targetDate: string;
   }) {
@@ -127,7 +125,6 @@ export default function App() {
       {
         id,
         name,
-        emoji,
         target,
         saved: 0,
         weeklyAutoSave: Math.ceil(target / weeksLeft / 50) * 50,
@@ -142,7 +139,7 @@ export default function App() {
       ...goals, // newest quest sits at the top of the stack
     ]);
     setSheet(null);
-    setToast(`Quest started — ${emoji} ${name}`);
+    setToast(`Quest started — ${name}`);
     setTimeout(() => setToast(null), 2200);
   }
 

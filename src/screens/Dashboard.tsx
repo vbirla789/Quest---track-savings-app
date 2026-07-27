@@ -222,14 +222,12 @@ function GoalCard({
       className="surface-card flex flex-col gap-6 rounded-[24px] p-4 text-left"
     >
       <div className="flex w-full items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="grid size-9 place-items-center rounded-lg border border-elev text-[22px]">
-            {goal.emoji}
-          </div>
-          <div className="flex flex-col text-[14px]">
-            <p className="font-medium leading-[1.24]">{goal.name}</p>
-            <p className="leading-[1.4] text-ink-dim">{goal.streakWeeks} week streak</p>
-          </div>
+        {/* name + streak only. There's no icon here in the design, and the app
+            never asks for one — an auto-guessed emoji is a decoration that
+            claims to be the user's choice. */}
+        <div className="flex flex-col text-[14px]">
+          <p className="font-medium leading-[1.24]">{goal.name}</p>
+          <p className="leading-[1.4] text-ink-dim">{goal.streakWeeks} week streak</p>
         </div>
         {goal.squad.length > 0 && (
           <div className="flex">

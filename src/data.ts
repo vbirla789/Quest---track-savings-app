@@ -27,7 +27,6 @@ export type Contribution = {
 export type Goal = {
   id: string;
   name: string;
-  emoji: string;
   target: number;
   saved: number;
   /** recurring weekly auto-save that funds the "on track" projection */
@@ -53,7 +52,6 @@ export const GOALS: Goal[] = [
   {
     id: "goa",
     name: "Goa trip",
-    emoji: "🏖️",
     target: 80000,
     saved: 61200,
     weeklyAutoSave: 2500,
@@ -72,7 +70,6 @@ export const GOALS: Goal[] = [
   {
     id: "iphone",
     name: "iPhone 17 pro",
-    emoji: "📱",
     target: 134900,
     saved: 42800,
     weeklyAutoSave: 3000,
@@ -90,7 +87,6 @@ export const GOALS: Goal[] = [
   {
     id: "emergency",
     name: "Rainy day fund",
-    emoji: "🛟",
     target: 50000,
     saved: 47500,
     weeklyAutoSave: 1500,
