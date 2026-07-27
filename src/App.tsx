@@ -307,6 +307,11 @@ export default function App() {
               goal={celebration.goal}
               newLevel={celebration.level}
               onClose={closeCelebration}
+              onStartNewQuest={() => {
+                // the CTA promises a new quest, so actually open the sheet
+                closeCelebration();
+                setSheet("quest");
+              }}
             />
           )}
         </AnimatePresence>
