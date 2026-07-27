@@ -61,7 +61,7 @@ export default function App() {
   function addToGoal(
     id: string,
     amount: number,
-    category?: { label: string; source: ContributionSource },
+    category?: { label: string; source: ContributionSource; categoryId: string },
   ) {
     if (amount <= 0) return;
     const goal = goals.find((g) => g.id === id);
@@ -79,6 +79,7 @@ export default function App() {
       // if a stash somehow arrives untagged
       source: category?.source ?? "boost",
       label: category?.label || "Manual boost",
+      categoryId: category?.categoryId,
       amount,
       daysAgo: 0,
     };
@@ -190,7 +191,7 @@ export default function App() {
   function stashCash(
     goalId: string,
     amount: number,
-    category: { label: string; source: ContributionSource },
+    category: { label: string; source: ContributionSource; categoryId: string },
   ) {
     setSheet(null);
     addToGoal(goalId, amount, category);

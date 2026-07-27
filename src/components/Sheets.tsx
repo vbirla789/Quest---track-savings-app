@@ -1,8 +1,10 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { ContributionSource, Goal } from "../data";
+import { CATEGORIES } from "../lib/categories";
 import { inrPlain } from "../lib/format";
 import { DateWheel, Keyboard } from "./Keyboard";
+import MaskIcon from "./MaskIcon";
 
 /* ----------------------------------------------------------------------------
  * Bottom sheets for the dashboard's two primary actions.
@@ -304,22 +306,8 @@ export function NewQuestSheet({
 
 const AMOUNT_CHIPS = [500, 1000, 2500];
 
-/* How the money was saved — not what it would have been spent on. Each one
-   carries the contribution source it maps to, so the ledger row gets the right
-   icon instead of stamping every manual stash as a boost. */
-const CATEGORIES: {
-  id: string;
-  label: string;
-  icon: string;
-  source: ContributionSource;
-}[] = [
-  { id: "cooked", label: "Cooked in", icon: "🍜", source: "skip" },
-  { id: "cab", label: "Skipped cab", icon: "🚕", source: "skip" },
-  { id: "roundup", label: "Round-ups", icon: "🪙", source: "roundup" },
-  { id: "cashback", label: "Cashback", icon: "🎁", source: "boost" },
-  { id: "bonus", label: "Bonus", icon: "⚡", source: "boost" },
-  { id: "others", label: "Others", icon: "💬", source: "boost" },
-];
+/* Categories live in one shared module so the chips here and the ledger rows on
+   the details screen can't drift apart. */
 
 export function StashSheet({
   goals,
@@ -333,7 +321,7 @@ export function StashSheet({
   onStash: (
     goalId: string,
     amount: number,
-    category: { label: string; source: ContributionSource },
+    category: { label: string; source: ContributionSource; categoryId: string },
   ) => void;
 }) {
   const active = goals.filter((g) => g.saved < g.target);
@@ -448,7 +436,7 @@ export function StashSheet({
                       : "border-transparent bg-elev text-ink"
                   }`}
                 >
-                  <span className="text-[15px]">{c.icon}</span>
+                  <MaskIcon src={c.icon} inset={c.inset} box={20} />
                   {c.label}
                 </button>
               );
@@ -477,7 +465,11 @@ export function StashSheet({
       setStep(step + 1);
       return;
     }
-    onStash(goalId, value, { label: categoryLabel, source: picked?.source ?? "boost" });
+    onStash(goalId, value, {
+      label: categoryLabel,
+      source: picked?.source ?? "boost",
+      categoryId: category,
+    });
   }
 
   return (

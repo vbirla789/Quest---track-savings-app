@@ -1,7 +1,9 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { daysToGoal, type ContributionSource, type Goal } from "../data";
+import { categoryById } from "../lib/categories";
 import { inrPlain } from "../lib/format";
+import MaskIcon from "../components/MaskIcon";
 import { useCountUp } from "../lib/useCountUp";
 import ProgressRing from "../components/ProgressRing";
 import StatusBar from "../components/StatusBar";
@@ -205,8 +207,20 @@ export default function GoalDetails({
             {goal.contributions.map((c) => (
               <div key={c.id} className="surface-card flex items-center justify-between rounded-[24px] p-4">
                 <div className="flex items-center gap-3">
-                  <div className="grid size-9 place-items-center rounded-lg border border-elev">
-                    <SysIcon src={STASH_ICONS[c.source].src} inset={STASH_ICONS[c.source].inset} />
+                  {/* a stash added in-app shows its category's icon; the
+                      seeded ones fall back to the icon for their source */}
+                  <div className="grid size-9 place-items-center rounded-lg border border-elev text-lime">
+                    {(() => {
+                      const cat = categoryById(c.categoryId);
+                      return cat ? (
+                        <MaskIcon src={cat.icon} inset={cat.inset} />
+                      ) : (
+                        <SysIcon
+                          src={STASH_ICONS[c.source].src}
+                          inset={STASH_ICONS[c.source].inset}
+                        />
+                      );
+                    })()}
                   </div>
                   <div className="flex flex-col text-[14px]">
                     <p className="font-medium leading-[1.24] text-ink">{c.label}</p>

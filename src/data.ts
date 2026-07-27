@@ -20,6 +20,8 @@ export type Contribution = {
   label: string;
   amount: number;
   daysAgo: number;
+  /** category id for stashes added in-app, so the ledger shows its icon */
+  categoryId?: string;
 };
 
 export type Goal = {
