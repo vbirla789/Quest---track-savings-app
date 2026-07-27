@@ -198,22 +198,20 @@ function sixMonthsOut() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
+/* Creation only. Editing an existing quest is a full screen (EditQuest) — a
+   wizard is right for a funnel, wrong for changing one prefilled field. */
 export function NewQuestSheet({
-  initial,
   onClose,
   onSubmit,
 }: {
-  /** present when editing an existing quest — the same wizard, prefilled */
-  initial?: { name: string; target: number; targetDate?: string };
   onClose: () => void;
   onSubmit: (input: { name: string; emoji: string; target: number; targetDate: string }) => void;
 }) {
-  const isEdit = !!initial;
   const [step, setStep] = useState(0);
-  const [name, setName] = useState(initial?.name ?? "");
-  const [amount, setAmount] = useState(initial ? String(initial.target) : "");
+  const [name, setName] = useState("");
+  const [amount, setAmount] = useState("");
   // seed the wheel six months out so the field reads as filled, like the design
-  const [date, setDate] = useState(initial?.targetDate || sixMonthsOut());
+  const [date, setDate] = useState(sixMonthsOut());
 
   const target = Number(amount) || 0;
 
@@ -256,7 +254,7 @@ export function NewQuestSheet({
     },
     {
       label: "Target date",
-      cta: isEdit ? "Save changes" : "Start quest",
+      cta: "Start quest",
       valid: date !== "",
       field: (
         <input

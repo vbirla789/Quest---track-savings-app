@@ -10,11 +10,12 @@ import {
 import PhoneFrame from "./components/PhoneFrame";
 import { NewQuestSheet, StashSheet } from "./components/Sheets";
 import Dashboard from "./screens/Dashboard";
+import EditQuest from "./screens/EditQuest";
 import GoalDetails from "./screens/GoalDetails";
 import LevelUp from "./screens/LevelUp";
 
-type View = "dashboard" | "details";
-type SheetKind = "quest" | "edit" | "stash" | null;
+type View = "dashboard" | "details" | "edit";
+type SheetKind = "quest" | "stash" | null;
 
 /* Shrink the phone to fit small desktop windows while keeping it 1:1 on a
    roomy screen. Outer phone box ≈ 400×854 + a little breathing room. */
@@ -147,12 +148,10 @@ export default function App() {
 
   function saveQuest({
     name,
-    emoji,
     target,
     targetDate,
   }: {
     name: string;
-    emoji: string;
     target: number;
     targetDate: string;
   }) {
@@ -162,8 +161,6 @@ export default function App() {
           ? {
               ...g,
               name,
-              // keep a hand-picked icon unless the name changed the guess
-              emoji: g.name === name ? g.emoji : emoji,
               target,
               targetDate,
               deadline: new Date(targetDate).toLocaleDateString("en-GB", {
@@ -174,7 +171,7 @@ export default function App() {
           : g,
       ),
     );
-    setSheet(null);
+    setView("details");
     setToast("Quest updated ✅");
     setTimeout(() => setToast(null), 2200);
   }
@@ -248,8 +245,25 @@ export default function App() {
                 onBack={() => setView("dashboard")}
                 onStashMoney={() => setSheet("stash")}
                 onNudgeSquad={() => nudge("your squad")}
-                onEdit={() => setSheet("edit")}
+                onEdit={() => setView("edit")}
                 onDelete={deleteQuest}
+              />
+            </motion.div>
+          )}
+
+          {view === "edit" && selected && (
+            <motion.div
+              key="edit"
+              className="h-full"
+              initial={{ opacity: 0, x: 24 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 24 }}
+              transition={{ type: "spring", stiffness: 260, damping: 26 }}
+            >
+              <EditQuest
+                goal={selected}
+                onCancel={() => setView("details")}
+                onSave={saveQuest}
               />
             </motion.div>
           )}
@@ -257,22 +271,8 @@ export default function App() {
 
         {/* bottom sheets for the two dashboard CTAs */}
         <AnimatePresence>
-          {/* keys matter here: "quest" and "edit" render the same component, so
-              without them AnimatePresence can't tell one sheet from the other */}
           {sheet === "quest" && (
             <NewQuestSheet key="quest" onClose={() => setSheet(null)} onSubmit={createQuest} />
-          )}
-          {sheet === "edit" && selected && (
-            <NewQuestSheet
-              key="edit"
-              initial={{
-                name: selected.name,
-                target: selected.target,
-                targetDate: selected.targetDate,
-              }}
-              onClose={() => setSheet(null)}
-              onSubmit={saveQuest}
-            />
           )}
           {sheet === "stash" && (
             <StashSheet

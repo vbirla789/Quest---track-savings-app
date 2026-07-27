@@ -62,11 +62,11 @@ export const GOALS: Goal[] = [
     targetDate: "2026-12-15",
     squad: ["/avatars/arthur.png", "/avatars/wei.png", "/avatars/natalia.png"],
     contributions: [
-      { id: "g1", source: "skip", label: "Cooked instead of ordering", amount: 320, daysAgo: 0 },
-      { id: "g2", source: "roundup", label: "Round-ups · 9 spends", amount: 148, daysAgo: 1 },
-      { id: "g3", source: "auto", label: "Friday auto-stash", amount: 2500, daysAgo: 2 },
-      { id: "g4", source: "skip", label: "Skipped 2 late-night orders", amount: 540, daysAgo: 4 },
-      { id: "g5", source: "boost", label: "Manual boost", amount: 1000, daysAgo: 6 },
+      { id: "g1", categoryId: "cooked", source: "skip", label: "Cooked in", amount: 320, daysAgo: 0 },
+      { id: "g2", categoryId: "roundup", source: "roundup", label: "Round-ups", amount: 148, daysAgo: 1 },
+      { id: "g3", categoryId: "cab", source: "skip", label: "Skipped cab", amount: 540, daysAgo: 2 },
+      { id: "g4", categoryId: "cashback", source: "boost", label: "Cashback", amount: 1000, daysAgo: 4 },
+      { id: "g5", categoryId: "bonus", source: "boost", label: "Bonus", amount: 2500, daysAgo: 6 },
     ],
   },
   {
@@ -81,9 +81,10 @@ export const GOALS: Goal[] = [
     targetDate: "2027-03-15",
     squad: ["/avatars/wei.png"],
     contributions: [
-      { id: "i1", source: "auto", label: "Friday auto-stash", amount: 3000, daysAgo: 2 },
-      { id: "i2", source: "roundup", label: "Round-ups · 14 spends", amount: 232, daysAgo: 2 },
-      { id: "i3", source: "skip", label: "Cooked all week 🔥", amount: 1180, daysAgo: 3 },
+      { id: "i1", categoryId: "bonus", source: "boost", label: "Bonus", amount: 3000, daysAgo: 1 },
+      { id: "i2", categoryId: "roundup", source: "roundup", label: "Round-ups", amount: 232, daysAgo: 2 },
+      { id: "i3", categoryId: "cooked", source: "skip", label: "Cooked in", amount: 1180, daysAgo: 3 },
+      { id: "i4", categoryId: "cab", source: "skip", label: "Skipped cab", amount: 260, daysAgo: 5 },
     ],
   },
   {
@@ -97,9 +98,9 @@ export const GOALS: Goal[] = [
     deadline: "Ongoing",
     squad: [],
     contributions: [
-      { id: "e1", source: "auto", label: "Weekly safety net", amount: 1500, daysAgo: 1 },
-      { id: "e2", source: "roundup", label: "Round-ups · 6 spends", amount: 96, daysAgo: 3 },
-      { id: "e3", source: "skip", label: "Meal-prep Sunday", amount: 410, daysAgo: 5 },
+      { id: "e1", categoryId: "cashback", source: "boost", label: "Cashback", amount: 1500, daysAgo: 1 },
+      { id: "e2", categoryId: "roundup", source: "roundup", label: "Round-ups", amount: 96, daysAgo: 3 },
+      { id: "e3", categoryId: "cooked", source: "skip", label: "Cooked in", amount: 410, daysAgo: 5 },
     ],
   },
 ];
