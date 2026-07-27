@@ -10,10 +10,11 @@ import MaskIcon from "./MaskIcon";
  * Bottom sheets for the dashboard's two primary actions.
  *
  * Both ask ONE question per step so the user never faces a wall of fields:
- *   New quest → goal name → target amount → target date
- *   Add money → which quest → how much
+ *   New quest → quest name → target amount → target date
+ *   Add money → which quest → how much → category
  * The shell (scrim, grabber, panel, single CTA) is shared; only the question
- * block swaps, sliding sideways as you advance.
+ * block swaps, sliding sideways as you advance. No supporting copy under the
+ * question — the label and the field carry it.
  * --------------------------------------------------------------------------*/
 
 /* The overlay and the sheet animate as separate layers off one parent state,
@@ -84,7 +85,6 @@ function Field({
 function SheetShell({
   step,
   label,
-  helper,
   cta,
   ctaDisabled,
   onCta,
@@ -94,7 +94,6 @@ function SheetShell({
 }: {
   step: number;
   label: string;
-  helper: string;
   cta: string;
   ctaDisabled?: boolean;
   onCta: () => void;
@@ -152,7 +151,6 @@ function SheetShell({
             >
               <p className="text-[18px] font-medium leading-[1.4] text-white">{label}</p>
               {children}
-              <p className="text-[14px] leading-[1.4] text-ink-dim">{helper}</p>
             </motion.div>
           </AnimatePresence>
 
@@ -222,7 +220,6 @@ export function NewQuestSheet({
   const steps = [
     {
       label: "Quest name",
-      helper: "You can always change this later",
       cta: "Continue",
       valid: name.trim().length > 0,
       field: (
@@ -239,7 +236,6 @@ export function NewQuestSheet({
     },
     {
       label: "Target amount",
-      helper: "You can always change this later",
       cta: "Continue",
       valid: target > 0,
       field: (
@@ -260,7 +256,6 @@ export function NewQuestSheet({
     },
     {
       label: "Target date",
-      helper: "Stay on track by adding a target date",
       cta: isEdit ? "Save changes" : "Start quest",
       valid: date !== "",
       field: (
@@ -290,7 +285,6 @@ export function NewQuestSheet({
     <SheetShell
       step={step}
       label={current.label}
-      helper={current.helper}
       cta={current.cta}
       ctaDisabled={!current.valid}
       onCta={advance}
@@ -336,7 +330,6 @@ export function StashSheet({
   const [customCategory, setCustomCategory] = useState("");
 
   const value = Number(amount) || 0;
-  const goal = active.find((g) => g.id === goalId);
   const isOther = category === "others";
   const picked = CATEGORIES.find((c) => c.id === category);
   const categoryLabel = isOther ? customCategory.trim() : (picked?.label ?? "");
@@ -344,7 +337,6 @@ export function StashSheet({
   const steps = [
     {
       label: "Add to which quest?",
-      helper: "Pick where this money should go",
       cta: "Continue",
       valid: goalId !== "",
       accessory: undefined,
@@ -372,7 +364,6 @@ export function StashSheet({
     },
     {
       label: "How much?",
-      helper: goal ? `Adding to ${goal.name}` : "Enter an amount to stash",
       cta: "Continue",
       valid: value > 0,
       accessory: (
@@ -408,7 +399,6 @@ export function StashSheet({
     },
     {
       label: "Category",
-      helper: "How did you save this money?",
       cta: value > 0 ? `Add ₹${inrPlain(value)}` : "Add money",
       valid: categoryLabel !== "",
       // only the free-text "Others" name needs a keyboard
@@ -476,7 +466,6 @@ export function StashSheet({
     <SheetShell
       step={step}
       label={current.label}
-      helper={current.helper}
       cta={current.cta}
       ctaDisabled={!current.valid}
       onCta={advance}

@@ -162,7 +162,7 @@ export default function Dashboard({
                 {FRIENDS.map((f) => (
                   <div
                     key={f.id}
-                    className="surface-card flex items-center justify-between rounded-[24px] p-4"
+                    className="surface-card flex items-center justify-between rounded-[20px] p-4"
                   >
                     <div className="flex items-center gap-3">
                       <div
@@ -219,7 +219,7 @@ function GoalCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: "spring", stiffness: 140, damping: 18, delay: index * 0.06 }}
       whileTap={{ scale: 0.98 }}
-      className="surface-card flex flex-col gap-6 rounded-[28px] p-4 text-left"
+      className="surface-card flex flex-col gap-6 rounded-[24px] p-4 text-left"
     >
       <div className="flex w-full items-center justify-between">
         <div className="flex items-center gap-3">

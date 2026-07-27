@@ -161,7 +161,7 @@ export default function GoalDetails({
 
           {/* squad on this goal */}
           {goal.squad.length > 0 && (
-            <div className="surface-card flex items-center justify-between rounded-[24px] p-4">
+            <div className="surface-card flex items-center justify-between rounded-[20px] p-4">
               <div className="flex items-center gap-2">
                 <div className="flex">
                   {goal.squad.map((src, i) => (
@@ -205,7 +205,7 @@ export default function GoalDetails({
               </div>
             )}
             {goal.contributions.map((c) => (
-              <div key={c.id} className="surface-card flex items-center justify-between rounded-[24px] p-4">
+              <div key={c.id} className="surface-card flex items-center justify-between rounded-[20px] p-4">
                 <div className="flex items-center gap-3">
                   {/* a stash added in-app shows its category's icon; the
                       seeded ones fall back to the icon for their source */}
@@ -259,7 +259,7 @@ export default function GoalDetails({
 
 function Stat({ icon, value, label }: { icon: React.ReactNode; value: string; label: string }) {
   return (
-    <div className="surface-card flex flex-1 flex-col items-center gap-1.5 rounded-[24px] p-2">
+    <div className="surface-card flex flex-1 flex-col items-center gap-1.5 rounded-[20px] p-2">
       <div className="grid size-8 place-items-center rounded-lg p-1">{icon}</div>
       <div className="flex w-full flex-col gap-1 text-center text-[14px]">
         <p className="font-medium leading-[1.24] text-ink tnum">{value}</p>
