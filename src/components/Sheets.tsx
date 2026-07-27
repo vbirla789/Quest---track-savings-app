@@ -91,6 +91,7 @@ function SheetShell({
   onClose,
   children,
   accessory,
+  panelHeight,
 }: {
   step: number;
   label: string;
@@ -101,6 +102,8 @@ function SheetShell({
   children: ReactNode;
   /** faux keyboard / date wheel docked under the panel */
   accessory?: ReactNode;
+  /** overrides the default for a step that needs more room (e.g. an open menu) */
+  panelHeight?: number;
 }) {
   return (
     <motion.div
@@ -134,7 +137,7 @@ function SheetShell({
           /* real height, so justify-between has room to work — flex-1 here
              would collapse to content in an auto-height sheet. min-h-0 still
              lets it shrink when the sheet is capped to a short viewport. */
-          animate={{ height: accessory ? 290 : 350 }}
+          animate={{ height: panelHeight ?? (accessory ? 290 : 350) }}
           initial={false}
           transition={{ duration: 0.25, ease: EASE_DRAWER }}
         >
@@ -326,6 +329,9 @@ export function StashSheet({
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("");
   const [customCategory, setCustomCategory] = useState("");
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  const chosen = active.find((g) => g.id === goalId);
 
   const value = Number(amount) || 0;
   const isOther = category === "others";
@@ -338,25 +344,77 @@ export function StashSheet({
       cta: "Continue",
       valid: goalId !== "",
       accessory: undefined,
+      /* the menu needs somewhere to go, so the panel grows while it's open */
+      panelHeight: pickerOpen ? 430 : 300,
       field: (
-        <div className="flex max-h-[168px] flex-col gap-2 overflow-y-auto phone-scroll">
-          {active.map((g) => {
-            const p = Math.round((g.saved / g.target) * 100);
-            const selected = goalId === g.id;
-            return (
-              <button
-                key={g.id}
-                onClick={() => setGoalId(g.id)}
-                className={`flex items-center gap-3 rounded-[16px] border p-3 text-left transition-colors ${
-                  selected ? "border-lime bg-lime/10" : "border-transparent bg-elev"
-                }`}
+        <div className="flex flex-col gap-2">
+          {/* Reads as a field, behaves as a select: one line showing the current
+              choice, and the options only when you ask for them. A bare list of
+              every quest made the first step the busiest one. */}
+          <button
+            onClick={() => setPickerOpen((o) => !o)}
+            className={`flex w-full items-center gap-3 rounded-[16px] bg-elev p-4 text-left transition-shadow ${
+              pickerOpen ? "shadow-[0_0_0_1.5px_var(--color-lime)]" : ""
+            }`}
+          >
+            {chosen ? (
+              <>
+                <span className="text-[20px] leading-none">{chosen.emoji}</span>
+                <span className="flex-1 text-[14px] font-medium text-white">{chosen.name}</span>
+              </>
+            ) : (
+              <span className="flex-1 text-[14px] text-ink-dim">Select a quest</span>
+            )}
+            <MaskIcon
+              src="/icons/chevron-left.svg"
+              inset="21.88% 38.54% 21.88% 30.21%"
+              box={20}
+              className={`text-ink-dim transition-transform duration-200 ${
+                pickerOpen ? "rotate-90" : "-rotate-90"
+              }`}
+            />
+          </button>
+
+          <AnimatePresence initial={false}>
+            {pickerOpen && (
+              <motion.div
+                className="overflow-hidden"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.22, ease: EASE_DRAWER }}
               >
-                <span className="text-[20px]">{g.emoji}</span>
-                <span className="flex-1 text-[14px] font-medium">{g.name}</span>
-                <span className="text-[13px] font-medium text-ink-dim tnum">{p}%</span>
-              </button>
-            );
-          })}
+                <div className="phone-scroll flex max-h-[164px] flex-col gap-1 overflow-y-auto rounded-[16px] bg-elev p-1">
+                  {active.map((g) => {
+                    const p = Math.round((g.saved / g.target) * 100);
+                    const selected = goalId === g.id;
+                    return (
+                      <button
+                        key={g.id}
+                        onClick={() => {
+                          setGoalId(g.id);
+                          setPickerOpen(false);
+                        }}
+                        className={`flex items-center gap-3 rounded-[12px] p-3 text-left transition-colors ${
+                          selected ? "bg-lime/15" : "active:bg-white/8"
+                        }`}
+                      >
+                        <span className="text-[20px] leading-none">{g.emoji}</span>
+                        <span
+                          className={`flex-1 text-[14px] font-medium ${
+                            selected ? "text-lime" : "text-ink"
+                          }`}
+                        >
+                          {g.name}
+                        </span>
+                        <span className="text-[13px] font-medium text-ink-dim tnum">{p}%</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       ),
     },
@@ -450,6 +508,7 @@ export function StashSheet({
   function advance() {
     if (!current.valid) return;
     if (step < steps.length - 1) {
+      setPickerOpen(false);
       setStep(step + 1);
       return;
     }
@@ -469,6 +528,7 @@ export function StashSheet({
       onCta={advance}
       onClose={onClose}
       accessory={current.accessory}
+      panelHeight={current.panelHeight}
     >
       {current.field}
     </SheetShell>

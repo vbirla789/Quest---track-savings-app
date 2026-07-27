@@ -134,9 +134,7 @@ export default function GoalDetails({
           {/* stat trio — icons are global, identical across every goal */}
           <div className="flex items-start gap-3">
             <Stat
-              icon={
-                <SysIcon src="/icons/rewind-check.svg" inset="5.21% 13.54% 9.38% 13.54%" />
-              }
+              icon={<SysIcon src="/icons/hourglass-half.svg" inset="11.47% 17.71%" />}
               value={`₹${inrPlain(remaining)}`}
               label="Still to go"
             />
