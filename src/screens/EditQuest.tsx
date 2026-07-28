@@ -109,7 +109,7 @@ export default function EditQuest({
     />
   ) : (
     <div className="w-full rounded-t-[25px] bg-card px-4 pb-6 pt-2">
-      <DateWheel value={date} onChange={setDate} />
+      <DateWheel value={date} onChange={setDate} theme="dark" />
     </div>
   );
 

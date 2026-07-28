@@ -176,11 +176,13 @@ function Column({
   index,
   onChange,
   width,
+  light,
 }: {
   items: string[];
   index: number;
   onChange: (i: number) => void;
   width: string;
+  light: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -213,7 +215,15 @@ function Column({
         <div
           key={it + i}
           className={`flex snap-center items-center justify-center text-[19px] transition-colors ${
-            i === index ? "font-medium text-ink" : "text-ink-dim"
+            light ? "font-mono" : ""
+          } ${
+            i === index
+              ? light
+                ? "font-medium text-black"
+                : "font-medium text-ink"
+              : light
+                ? "text-[#a3a3a3]"
+                : "text-ink-dim"
           }`}
           style={{ height: ITEM_H }}
         >
@@ -225,14 +235,22 @@ function Column({
   );
 }
 
-/** iOS-style day / month / year wheel. `value` is an ISO yyyy-mm-dd string. */
+/**
+ * iOS-style day / month / year wheel. `value` is an ISO yyyy-mm-dd string.
+ *
+ * Themed rather than switched wholesale: the sheets are on the light system now,
+ * but EditQuest is still one of the dark screens and docks the same wheel.
+ */
 export function DateWheel({
   value,
   onChange,
+  theme = "light",
 }: {
   value: string;
   onChange: (iso: string) => void;
+  theme?: "light" | "dark";
 }) {
+  const light = theme === "light";
   const base = value ? new Date(value) : new Date();
   const thisYear = new Date().getFullYear();
   const years = Array.from({ length: 8 }, (_, i) => String(thisYear + i));
@@ -252,16 +270,21 @@ export function DateWheel({
   };
 
   return (
-    <div className="relative w-full bg-[#202125] pb-6 pt-2">
-      {/* selection band */}
+    <div className={`relative w-full pb-6 pt-2 ${light ? "bg-white" : "bg-[#202125]"}`}>
+      {/* Selection band. It's absolutely positioned, so despite coming first in
+          the DOM it paints *above* the static columns — at 8% white that was
+          invisible, but an opaque band hid the selected row entirely. Explicit
+          layers rather than relying on paint order. */}
       <div
-        className="pointer-events-none absolute inset-x-4 top-1/2 -translate-y-1/2 rounded-[10px] bg-white/8"
+        className={`pointer-events-none absolute inset-x-4 top-1/2 z-0 -translate-y-1/2 ${
+          light ? "rounded-[4px] bg-[#f0f0f0]" : "rounded-[10px] bg-white/8"
+        }`}
         style={{ height: ITEM_H, marginTop: -10 }}
       />
-      <div className="flex justify-center gap-2">
-        <Column items={days} index={day} width="72px" onChange={(i) => emit(i, month, year)} />
-        <Column items={MONTHS} index={month} width="88px" onChange={(i) => emit(day, i, year)} />
-        <Column items={years} index={year} width="88px" onChange={(i) => emit(day, month, i)} />
+      <div className="relative z-10 flex justify-center gap-2">
+        <Column light={light} items={days} index={day} width="72px" onChange={(i) => emit(i, month, year)} />
+        <Column light={light} items={MONTHS} index={month} width="88px" onChange={(i) => emit(day, i, year)} />
+        <Column light={light} items={years} index={year} width="88px" onChange={(i) => emit(day, month, i)} />
       </div>
     </div>
   );
