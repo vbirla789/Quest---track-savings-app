@@ -1,4 +1,5 @@
 import type { Goal } from "../data";
+import { parseLocalDate } from "./dates";
 
 /* ----------------------------------------------------------------------------
  * Pace: are you ahead of, on, or behind the schedule your own deadline implies?
@@ -23,7 +24,7 @@ const WEEK = 7 * DAY;
  */
 export function expectedByNow(goal: Goal): number | null {
   if (!goal.targetDate) return null;
-  const weeksLeft = Math.max(0, (new Date(goal.targetDate).getTime() - Date.now()) / WEEK);
+  const weeksLeft = Math.max(0, (parseLocalDate(goal.targetDate).getTime() - Date.now()) / WEEK);
   const elapsed = Math.max(1, goal.streakWeeks);
   return goal.target * (elapsed / (elapsed + weeksLeft));
 }
@@ -53,10 +54,10 @@ export function behindBy(goal: Goal): number {
  */
 export function timeLabel(goal: Goal): string {
   if (!goal.targetDate) return "Ongoing";
-  const days = Math.max(0, Math.ceil((new Date(goal.targetDate).getTime() - Date.now()) / DAY));
+  const days = Math.max(0, Math.ceil((parseLocalDate(goal.targetDate).getTime() - Date.now()) / DAY));
   if (days === 0) return "Due today";
   if (days <= 30) return `${days} day${days === 1 ? "" : "s"} left`;
-  return `by ${new Date(goal.targetDate).toLocaleDateString("en-GB", {
+  return `by ${parseLocalDate(goal.targetDate).toLocaleDateString("en-GB", {
     day: "numeric",
     month: "short",
   })}`;

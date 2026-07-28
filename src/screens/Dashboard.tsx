@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Goal } from "../data";
 import { inrPlain } from "../lib/format";
 import { PACE_LABEL, dailyTotals, overallPace, paceOf, timeLabel, type Pace } from "../lib/pace";
@@ -39,6 +39,47 @@ export default function Dashboard({
   onStashCash: () => void;
 }) {
   const [tab, setTab] = useState<"total" | "progress">("total");
+  const [hidden, setHidden] = useState(false);
+
+  /* The header pill is the hero total, promoted once the hero scrolls away — so
+     the number is never off screen. Driven by an observer on the readout itself
+     rather than a scroll-offset threshold, which would need re-tuning every
+     time anything above it changes height. */
+  const readoutRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const [showPill, setShowPill] = useState(false);
+
+  useEffect(() => {
+    const el = readoutRef.current;
+    const scroller = el?.closest<HTMLElement>(".phone-scroll");
+    if (!el || !scroller) return;
+
+    /* Rect math on scroll rather than an IntersectionObserver. The observer
+       needs its top inset by the header height anyway — "hidden behind the
+       header" is what should trigger the pill, not "past the viewport edge" —
+       and comparing the two rects says that directly. It also measures the
+       header live, which matters because the faux status bar is hidden on
+       phones and the header is shorter there. */
+    let frame = 0;
+    const measure = () => {
+      frame = 0;
+      const headerH = headerRef.current?.offsetHeight ?? 0;
+      const bottom = el.getBoundingClientRect().bottom - scroller.getBoundingClientRect().top;
+      setShowPill(bottom <= headerH);
+    };
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(measure);
+    };
+
+    measure();
+    scroller.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      scroller.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [tab, hidden]);
 
   const totalSaved = goals.reduce((s, g) => s + g.saved, 0);
   const animatedTotal = useCountUp(totalSaved);
@@ -52,12 +93,36 @@ export default function Dashboard({
     <div className="relative h-full overflow-hidden bg-white text-black">
       {/* pb clears the home indicator, which floats over this scroller */}
       <div className="phone-scroll safe-top h-full overflow-y-auto pb-20">
-        <StatusBar theme="light" />
+        {/* Header sticks with the status bar, not on its own: on desktop the
+            faux status bar would otherwise slide out from under it. */}
+        <div ref={headerRef} className="sticky top-0 z-30 bg-white">
+          <StatusBar theme="light" />
+          <div className="flex items-center justify-between px-5 py-3">
+            <IconButton src="/icons/lt-profile.svg" label="Profile" />
 
-        {/* header — two 40px circle buttons, nothing between them */}
-        <div className="flex items-center justify-between px-5 py-3">
-          <IconButton src="/icons/lt-profile.svg" label="Profile" />
-          <IconButton src="/icons/lt-eye.svg" label="Hide balances" />
+            <AnimatePresence>
+              {showPill && (
+                <motion.div
+                  className="flex h-10 items-center rounded-full border border-[#ebebeb] bg-white px-3"
+                  style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.04))" }}
+                  initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -8, scale: 0.96 }}
+                  transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
+                >
+                  <span className={`${LABEL} uppercase whitespace-nowrap tnum`}>
+                    {hidden ? "₹ ••••••" : `₹${inrPlain(totalSaved)}`}
+                  </span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <IconButton
+              src={hidden ? "/icons/lt-eye-slash.svg" : "/icons/lt-eye.svg"}
+              label={hidden ? "Show balances" : "Hide balances"}
+              onClick={() => setHidden((h) => !h)}
+            />
+          </div>
         </div>
 
         <div className="flex flex-col items-center gap-8 px-5 pt-4">
@@ -78,14 +143,27 @@ export default function Dashboard({
             {/* readout + hero. Both swap with the tab, so each tab is a
                 complete thought rather than a graph under an unrelated total. */}
             <div className="flex w-full flex-col items-center gap-6">
-              <div className="flex flex-col items-center gap-2">
-                <div className="flex flex-col items-center gap-1 whitespace-nowrap">
+              <div ref={readoutRef} className="flex flex-col items-center gap-2">
+                <div className="flex w-[192px] flex-col items-center gap-1 whitespace-nowrap">
                   <p className={`${LABEL} uppercase text-[#a3a3a3]`}>
                     {tab === "total" ? "Total saved" : "Last 14 days"}
                   </p>
-                  <p className="font-serif text-[40px] font-semibold leading-[1.3] tnum">
-                    ₹{inrPlain(tab === "total" ? animatedTotal : windowTotal)}
-                  </p>
+                  {hidden ? (
+                    /* ₹ stays, the digits become dots — the currency still reads
+                       as money without publishing the amount */
+                    <div className="flex h-[52px] w-full items-center justify-between">
+                      <span className="font-serif text-[40px] font-semibold leading-[1.3]">₹</span>
+                      <div className="flex h-[52px] items-center justify-center gap-3">
+                        {Array.from({ length: 6 }, (_, i) => (
+                          <span key={i} className="size-4 rounded-full bg-[#212121]" />
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="font-serif text-[40px] font-semibold leading-[1.3] tnum">
+                      ₹{inrPlain(tab === "total" ? animatedTotal : windowTotal)}
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center gap-1.5">
                   <PaceDot pace={health} />
@@ -197,11 +275,20 @@ export default function Dashboard({
   );
 }
 
-function IconButton({ src, label }: { src: string; label: string }) {
+function IconButton({
+  src,
+  label,
+  onClick,
+}: {
+  src: string;
+  label: string;
+  onClick?: () => void;
+}) {
   return (
     <button
       aria-label={label}
-      className="grid size-10 place-items-center rounded-full border border-[#ebebeb] bg-white active:scale-95"
+      onClick={onClick}
+      className="grid size-10 shrink-0 place-items-center rounded-full border border-[#ebebeb] bg-white active:scale-95"
       style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.04))" }}
     >
       <img src={src} alt="" className="size-5" />

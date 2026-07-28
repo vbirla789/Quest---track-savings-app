@@ -12,6 +12,8 @@
 // rate, streaks and the projected finish date are all derived, not stored.
 // ---------------------------------------------------------------------------
 
+import { parseLocalDate, toLocalISO } from "./lib/dates";
+
 export type ContributionSource = "auto" | "roundup" | "skip" | "boost";
 
 export type Contribution = {
@@ -48,38 +50,56 @@ export type Friend = {
   progress: number; // 0..1
 };
 
+/**
+ * Deadlines are relative, not literal dates.
+ *
+ * Hardcoding "2026-08-07" means the card reads "9 days left" today, "3 days
+ * left" next week, and "Due today" after that — the seeded pace states quietly
+ * rot. Anchoring to now keeps the demo saying what the design says.
+ */
+function inDays(days: number) {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return toLocalISO(d);
+}
+
+const monthYear = (iso: string) =>
+  parseLocalDate(iso).toLocaleDateString("en-GB", { month: "short", year: "numeric" });
+
+const LADAKH_DUE = inDays(9);
+const IPHONE_DUE = inDays(24);
+const GOA_DUE = inDays(139);
+
+/* Copy and figures match Figma node 12045:71457. streakWeeks is also what the
+   pace maths reads as time elapsed, so each goal is tuned to land in a distinct
+   state: Ladakh ahead, iPhone behind, Goa exactly on pace. */
 export const GOALS: Goal[] = [
   {
-    id: "goa",
-    name: "Goa trip",
-    target: 80000,
-    saved: 61200,
+    id: "ladakh",
+    name: "Ladakh ride",
+    target: 50000,
+    saved: 43500,
     weeklyAutoSave: 2500,
-    streakWeeks: 12,
-    deadline: "Dec 2026",
-    targetDate: "2026-12-15",
-    squad: ["/avatars/arthur.png", "/avatars/wei.png", "/avatars/natalia.png"],
+    streakWeeks: 5,
+    deadline: monthYear(LADAKH_DUE),
+    targetDate: LADAKH_DUE,
+    squad: [],
     contributions: [
-      { id: "g1", categoryId: "cooked", source: "skip", label: "Cooked in", amount: 320, daysAgo: 0 },
-      { id: "g2", categoryId: "roundup", source: "roundup", label: "Round-ups", amount: 148, daysAgo: 1 },
-      { id: "g3", categoryId: "cab", source: "skip", label: "Skipped cab", amount: 540, daysAgo: 2 },
-      { id: "g4", categoryId: "cashback", source: "boost", label: "Cashback", amount: 1000, daysAgo: 4 },
-      { id: "g5", categoryId: "bonus", source: "boost", label: "Bonus", amount: 2500, daysAgo: 6 },
+      { id: "l1", categoryId: "cashback", source: "boost", label: "Cashback", amount: 1500, daysAgo: 1 },
+      { id: "l2", categoryId: "roundup", source: "roundup", label: "Round-ups", amount: 96, daysAgo: 3 },
+      { id: "l3", categoryId: "cooked", source: "skip", label: "Cooked in", amount: 410, daysAgo: 5 },
     ],
   },
   {
     id: "iphone",
     name: "iPhone 17 pro",
     target: 134900,
-    saved: 42800,
+    saved: 32400,
     weeklyAutoSave: 3000,
     streakWeeks: 8,
-    deadline: "Nov 2026",
-    /* Deliberately tight. With a distant deadline every seeded goal computes as
-       ahead of pace, and the Overview's three-state colour system would never
-       show its amber case — this is the goal that demos it. */
-    targetDate: "2026-11-15",
-    squad: ["/avatars/wei.png"],
+    deadline: monthYear(IPHONE_DUE),
+    targetDate: IPHONE_DUE,
+    squad: [],
     contributions: [
       { id: "i1", categoryId: "bonus", source: "boost", label: "Bonus", amount: 3000, daysAgo: 1 },
       { id: "i2", categoryId: "roundup", source: "roundup", label: "Round-ups", amount: 232, daysAgo: 2 },
@@ -88,18 +108,21 @@ export const GOALS: Goal[] = [
     ],
   },
   {
-    id: "emergency",
-    name: "Rainy day fund",
+    id: "goa",
+    name: "Goa trip",
     target: 50000,
-    saved: 47500,
-    weeklyAutoSave: 1500,
-    streakWeeks: 21,
-    deadline: "Ongoing",
-    squad: [],
+    saved: 25000,
+    weeklyAutoSave: 2500,
+    streakWeeks: 20,
+    deadline: monthYear(GOA_DUE),
+    targetDate: GOA_DUE,
+    squad: ["/avatars/arthur.png", "/avatars/wei.png", "/avatars/natalia.png"],
     contributions: [
-      { id: "e1", categoryId: "cashback", source: "boost", label: "Cashback", amount: 1500, daysAgo: 1 },
-      { id: "e2", categoryId: "roundup", source: "roundup", label: "Round-ups", amount: 96, daysAgo: 3 },
-      { id: "e3", categoryId: "cooked", source: "skip", label: "Cooked in", amount: 410, daysAgo: 5 },
+      { id: "g1", categoryId: "cooked", source: "skip", label: "Cooked in", amount: 320, daysAgo: 0 },
+      { id: "g2", categoryId: "roundup", source: "roundup", label: "Round-ups", amount: 148, daysAgo: 1 },
+      { id: "g3", categoryId: "cab", source: "skip", label: "Skipped cab", amount: 540, daysAgo: 2 },
+      { id: "g4", categoryId: "cashback", source: "boost", label: "Cashback", amount: 1000, daysAgo: 4 },
+      { id: "g5", categoryId: "bonus", source: "boost", label: "Bonus", amount: 2500, daysAgo: 6 },
     ],
   },
 ];
@@ -136,7 +159,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
  */
 export function daysToGoal(goal: Goal) {
   if (goal.targetDate) {
-    return Math.max(0, Math.ceil((new Date(goal.targetDate).getTime() - Date.now()) / DAY_MS));
+    return Math.max(0, Math.ceil((parseLocalDate(goal.targetDate).getTime() - Date.now()) / DAY_MS));
   }
   const weeks = weeksToGoal(goal);
   return weeks === Infinity ? Infinity : weeks * 7;
