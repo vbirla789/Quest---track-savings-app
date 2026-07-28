@@ -3,6 +3,33 @@
 @theme {
   --font-display: "Geist", system-ui, sans-serif;
   --font-sans: "Geist", system-ui, sans-serif;
+  /* Overview runs a different type system to the dark screens: mono for every
+     label and control, serif for money and headings. */
+  --font-mono: "Geist Mono", ui-monospace, monospace;
+  --font-serif: "IBM Plex Serif", Georgia, serif;
+
+  /* Light system — Overview only (node 12044:26792). Its own token set rather
+     than flipping the dark ones, since the other screens still use those. */
+  --color-lt-ink: #000000;
+  --color-lt-dim: #a3a3a3;
+  --color-lt-hair: #e6e7e7; /* card border */
+  --color-lt-hair-soft: #ebebeb; /* icon-button border */
+  --color-lt-track: #f0f0f0; /* progress trough */
+  --color-lt-switch: #f9f9fb; /* switch track */
+  --color-lt-edge: #c7c8c8; /* secondary button border */
+  --color-lt-edge-dark: #8f8f8f; /* primary button border */
+
+  /* The three pace states. Strong stop is the text/bar end, soft is the bar
+     start; the card wash is a 3% tint of the same hue. */
+  --color-pace-ahead: #00c86a;
+  --color-pace-ahead-soft: #5ee7b7;
+  --color-pace-ahead-wash: #edfcf7;
+  --color-pace-on: #0a59ff;
+  --color-pace-on-soft: #b8cbf4;
+  --color-pace-on-wash: #edf2fd;
+  --color-pace-behind: #f9ca4d;
+  --color-pace-behind-soft: #f7eaca;
+  --color-pace-behind-wash: #fdf9ef;
 
   /* Flat dark system lifted from the Figma (R-R-2.0 → Quest dashboard) */
   --color-ink: #ffffff;

@@ -74,8 +74,11 @@ export const GOALS: Goal[] = [
     saved: 42800,
     weeklyAutoSave: 3000,
     streakWeeks: 8,
-    deadline: "Mar 2027",
-    targetDate: "2027-03-15",
+    deadline: "Nov 2026",
+    /* Deliberately tight. With a distant deadline every seeded goal computes as
+       ahead of pace, and the Overview's three-state colour system would never
+       show its amber case — this is the goal that demos it. */
+    targetDate: "2026-11-15",
     squad: ["/avatars/wei.png"],
     contributions: [
       { id: "i1", categoryId: "bonus", source: "boost", label: "Bonus", amount: 3000, daysAgo: 1 },
