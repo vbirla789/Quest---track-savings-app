@@ -21,14 +21,16 @@ export default function Success({
   goal,
   level,
   isGoalComplete,
+  origin,
   onShare,
-  onDashboard,
+  onDismiss,
 }: {
   goal: Goal;
   level: number;
   isGoalComplete: boolean;
+  origin: "earned" | "replay";
   onShare: () => void;
-  onDashboard: () => void;
+  onDismiss: () => void;
 }) {
   const pace = paceOf(goal);
   const pill = PACE_PILL[pace];
@@ -50,13 +52,36 @@ export default function Success({
         <div className="flex min-h-[calc(100%-47px)] flex-col items-center justify-center px-5 py-10">
           <div className="flex w-full flex-col items-center gap-14">
             <div className="flex w-full flex-col items-center gap-8">
-              <motion.div
-                initial={{ scale: 0.7, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ type: "spring", stiffness: 200, damping: 18 }}
-              >
-                <MilestoneBadge level={level} earned width={139} />
-              </motion.div>
+              <div className="relative grid place-items-center">
+                {/* Ray burst, drawn rather than shipped: a repeating conic wedge
+                    pattern faded out radially. A gradient scales to any badge
+                    size and costs nothing to load, where a PNG would need one
+                    export per density. */}
+                <motion.div
+                  className="pointer-events-none absolute"
+                  style={{
+                    width: 380,
+                    height: 500,
+                    background:
+                      "repeating-conic-gradient(from 4deg, rgba(0,200,106,0.16) 0deg 9deg, rgba(255,255,255,0) 9deg 22.5deg)",
+                    maskImage:
+                      "radial-gradient(closest-side, rgba(0,0,0,0.9), rgba(0,0,0,0.35) 55%, transparent 80%)",
+                    WebkitMaskImage:
+                      "radial-gradient(closest-side, rgba(0,0,0,0.9), rgba(0,0,0,0.35) 55%, transparent 80%)",
+                  }}
+                  initial={{ opacity: 0, scale: 0.85 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.6, ease: EASE_OUT }}
+                />
+                <motion.div
+                  className="relative"
+                  initial={{ scale: 0.7, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 18 }}
+                >
+                  <MilestoneBadge level={level} earned width={139} />
+                </motion.div>
+              </div>
 
               <motion.div
                 className="flex w-full flex-col items-center gap-2"
@@ -66,13 +91,14 @@ export default function Success({
               >
                 <div className="flex w-full flex-col items-center gap-1">
                   <p className={`${MONO} uppercase text-[#a3a3a3]`}>Total saved</p>
-                  {/* Sparkle rules flank the headline and take the leftover width,
-                      so they grow and shrink with whatever it says. */}
+                  {/* Fixed 34.5x15 — the asset's own ratio. Letting these stretch
+                      to fill the row squashed the star into a thin diamond,
+                      because the export has preserveAspectRatio="none". */}
                   <div className="flex w-full items-center justify-center gap-2">
                     {/* The asset carries its star at the right-hand end, so the
                         left rule sits as drawn and the right one mirrors — both
                         stars then point in at the headline. */}
-                    <img src="/icons/lt-sparkle.svg" alt="" className="h-[15px] min-w-0 flex-1" />
+                    <img src="/icons/lt-sparkle.svg" alt="" className="h-[15px] w-[34.5px] shrink-0" />
                     {isGoalComplete ? (
                       <p className="w-[224px] shrink-0 text-center font-serif text-[35px] font-semibold leading-[1.3]">
                         {goal.name} unlocked
@@ -85,7 +111,7 @@ export default function Success({
                     <img
                       src="/icons/lt-sparkle.svg"
                       alt=""
-                      className="h-[15px] min-w-0 flex-1 -scale-x-100"
+                      className="h-[15px] w-[34.5px] shrink-0 -scale-x-100"
                     />
                   </div>
                 </div>
@@ -124,12 +150,14 @@ export default function Success({
                 <span className={`${MONO} uppercase text-white`}>Share the win</span>
               </button>
               <button
-                onClick={onDashboard}
+                onClick={onDismiss}
                 className="flex h-10 w-full items-center justify-center gap-2 rounded-[2px] border border-[#c7c8c8] bg-white px-5 active:scale-[0.99]"
                 style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.06))" }}
               >
                 <img src="/icons/lt-redo.svg" alt="" className="size-5" />
-                <span className={`${MONO} uppercase`}>Go to dashboard</span>
+                <span className={`${MONO} uppercase`}>
+                  {origin === "earned" ? "Go to dashboard" : "Go back"}
+                </span>
               </button>
             </motion.div>
           </div>

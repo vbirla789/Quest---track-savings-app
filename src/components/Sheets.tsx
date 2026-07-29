@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import type { ContributionSource, Goal } from "../data";
+import type { ContributionSource, Cycle, Goal } from "../data";
 import { CATEGORIES } from "../lib/categories";
 import { inrPlain } from "../lib/format";
 import { DateWheel, Keyboard } from "./Keyboard";
@@ -182,6 +182,12 @@ function SheetShell({
 
 /* ------------------------------- New quest ------------------------------- */
 
+const CYCLES: { id: Cycle; label: string; hint: string }[] = [
+  { id: "daily", label: "Daily", hint: "Mon, Tue, Wed…" },
+  { id: "weekly", label: "Weekly", hint: "Week 1, Week 2…" },
+  { id: "monthly", label: "Monthly", hint: "Jan, Feb, Mar…" },
+];
+
 function sixMonthsOut() {
   const d = new Date();
   d.setMonth(d.getMonth() + 6);
@@ -195,13 +201,19 @@ export function NewQuestSheet({
   onSubmit,
 }: {
   onClose: () => void;
-  onSubmit: (input: { name: string; target: number; targetDate: string }) => void;
+  onSubmit: (input: {
+    name: string;
+    target: number;
+    targetDate: string;
+    cycle: Cycle;
+  }) => void;
 }) {
   const [step, setStep] = useState(0);
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   // seed the wheel six months out so the field reads as filled, like the design
   const [date, setDate] = useState(sixMonthsOut());
+  const [cycle, setCycle] = useState<Cycle | "">("");
 
   const target = Number(amount) || 0;
 
@@ -244,7 +256,7 @@ export function NewQuestSheet({
     },
     {
       label: "Target date",
-      cta: "Start goal",
+      cta: "Continue",
       valid: date !== "",
       field: (
         <input
@@ -256,6 +268,44 @@ export function NewQuestSheet({
       ),
       accessory: <DateWheel value={date} onChange={setDate} />,
     },
+    {
+      /* Last question, because it's the only one whose answer changes how the
+         goal is *read* later — it sets the granularity of the streak grid. */
+      label: "How often will you pay in?",
+      cta: "Start goal",
+      valid: cycle !== "",
+      accessory: undefined,
+      panelHeight: 360,
+      field: (
+        <div className="flex flex-col gap-2">
+          {CYCLES.map((c) => {
+            const selected = cycle === c.id;
+            return (
+              <button
+                key={c.id}
+                onClick={() => setCycle(c.id)}
+                className={`flex items-center justify-between rounded-[4px] border p-4 text-left transition-colors ${
+                  selected
+                    ? "border-[#0a59ff] bg-[#edf2fd]"
+                    : "border-[#e6e7e7] bg-[#f9f9fb]"
+                }`}
+              >
+                <span
+                  className={`font-mono text-[14px] font-medium ${
+                    selected ? "text-[#0a59ff]" : "text-black"
+                  }`}
+                >
+                  {c.label}
+                </span>
+                <span className={`font-mono text-[12px] ${selected ? "text-[#0a59ff]" : "text-[#a3a3a3]"}`}>
+                  {c.hint}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      ),
+    },
   ];
 
   const current = steps[step];
@@ -266,7 +316,7 @@ export function NewQuestSheet({
       setStep(step + 1);
       return;
     }
-    onSubmit({ name: name.trim(), target, targetDate: date });
+    onSubmit({ name: name.trim(), target, targetDate: date, cycle: cycle as Cycle });
   }
 
   return (

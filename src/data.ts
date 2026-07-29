@@ -26,15 +26,18 @@ export type Contribution = {
   categoryId?: string;
 };
 
+/** How often the user intends to pay in. Drives the streak grid's granularity. */
+export type Cycle = "daily" | "weekly" | "monthly";
+
 export type Goal = {
   id: string;
   name: string;
+  cycle: Cycle;
   target: number;
   saved: number;
   /** recurring weekly auto-save that funds the "on track" projection */
   weeklyAutoSave: number;
   streakWeeks: number;
-  deadline: string;
   /** ISO yyyy-mm-dd, kept so the edit sheet can prefill the date wheel */
   targetDate?: string;
   squad: SquadMember[]; // friends saving toward the same goal
@@ -87,9 +90,6 @@ function autoSaves(prefix: string, monthly: number, months: number): Contributio
   }));
 }
 
-const monthYear = (iso: string) =>
-  parseLocalDate(iso).toLocaleDateString("en-GB", { month: "short", year: "numeric" });
-
 /**
  * Days between today and the given day of a month N months back.
  *
@@ -114,12 +114,12 @@ const GOA_DUE = inDays(139);
 export const GOALS: Goal[] = [
   {
     id: "ladakh",
+    cycle: "monthly",
     name: "Ladakh ride",
     target: 50000,
     saved: 43500,
     weeklyAutoSave: 2500,
     streakWeeks: 5,
-    deadline: monthYear(LADAKH_DUE),
     targetDate: LADAKH_DUE,
     squad: [],
     contributions: [
@@ -140,12 +140,12 @@ export const GOALS: Goal[] = [
   },
   {
     id: "iphone",
+    cycle: "monthly",
     name: "iPhone 17 pro",
     target: 134900,
     saved: 32400,
     weeklyAutoSave: 3000,
     streakWeeks: 8,
-    deadline: monthYear(IPHONE_DUE),
     targetDate: IPHONE_DUE,
     squad: [],
     contributions: [
@@ -167,12 +167,12 @@ export const GOALS: Goal[] = [
   },
   {
     id: "goa",
+    cycle: "monthly",
     name: "Goa trip",
     target: 50000,
     saved: 25000,
     weeklyAutoSave: 2500,
     streakWeeks: 20,
-    deadline: monthYear(GOA_DUE),
     targetDate: GOA_DUE,
     squad: [
       { name: "Aarav", avatar: "/avatars/arthur.png" },

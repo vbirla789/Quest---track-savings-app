@@ -4,12 +4,14 @@ import {
   GOALS,
   type Contribution,
   type ContributionSource,
+  type Cycle,
   type Goal,
   type SquadMember,
 } from "./data";
 import PhoneFrame from "./components/PhoneFrame";
 import ContactPicker from "./components/ContactPicker";
 import { NewQuestSheet, StashSheet } from "./components/Sheets";
+import { parseLocalDate } from "./lib/dates";
 import { milestones } from "./lib/pace";
 import Dashboard from "./screens/Dashboard";
 import EditQuest from "./screens/EditQuest";
@@ -56,7 +58,12 @@ export default function App() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   /* Which milestone we're celebrating, if any. Held by goal id + level rather
      than a snapshot of the goal, so the screen keeps reading live figures. */
-  const [celebration, setCelebration] = useState<{ goalId: string; level: number } | null>(null);
+  /* `origin` is why the screen is up. Earning a milestone hands you onward to the
+     dashboard; replaying an old one should put you back where you were, so the
+     button has to say different things. */
+  const [celebration, setCelebration] = useState<
+    { goalId: string; level: number; origin: "earned" | "replay" } | null
+  >(null);
   const [toast, setToast] = useState<string | null>(null);
   const [sheet, setSheet] = useState<SheetKind>(null);
 
@@ -110,7 +117,7 @@ export default function App() {
     );
     if (crossed > 0) {
       // let the bar animate a beat before the takeover
-      setTimeout(() => setCelebration({ goalId: id, level: crossed }), 620);
+      setTimeout(() => setCelebration({ goalId: id, level: crossed, origin: "earned" }), 620);
     }
     void nowComplete;
     void wasComplete;
@@ -125,30 +132,32 @@ export default function App() {
     name,
     target,
     targetDate,
+    cycle,
   }: {
     name: string;
     target: number;
     targetDate: string;
+    cycle: Cycle;
   }) {
     const id = `${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${goals.length}`;
     // The target date sets the pace: split the goal across the weeks remaining
     // so the "Savings/wk" stat and finish projection mean something from day one.
     const weeksLeft = Math.max(
       1,
-      Math.ceil((new Date(targetDate).getTime() - Date.now()) / (7 * 24 * 60 * 60 * 1000)),
+      Math.ceil((parseLocalDate(targetDate).getTime() - Date.now()) / (7 * 24 * 60 * 60 * 1000)),
     );
     setGoals([
       {
         id,
         name,
+        cycle,
         target,
         saved: 0,
         weeklyAutoSave: Math.ceil(target / weeksLeft / 50) * 50,
         streakWeeks: 0,
-        deadline: new Date(targetDate).toLocaleDateString("en-GB", {
-          month: "short",
-          year: "numeric",
-        }),
+        /* The wizard asks for this and used to throw it away, which left every
+           new goal reading "Ongoing" with no pace to be off. */
+        targetDate,
         squad: [],
         contributions: [],
       },
@@ -176,10 +185,6 @@ export default function App() {
               name,
               target,
               targetDate,
-              deadline: new Date(targetDate).toLocaleDateString("en-GB", {
-                month: "short",
-                year: "numeric",
-              }),
             }
           : g,
       ),
@@ -276,7 +281,9 @@ export default function App() {
                 onStashMoney={() => setSheet("stash")}
                 onNudgeSquad={() => nudge("your squad")}
                 onAddFriends={() => setSheet("contacts")}
-                onCelebrate={(level) => setCelebration({ goalId: selected.id, level })}
+                onCelebrate={(level) =>
+                  setCelebration({ goalId: selected.id, level, origin: "replay" })
+                }
                 onEdit={() => setView("edit")}
                 onDelete={deleteQuest}
               />
@@ -352,12 +359,15 @@ export default function App() {
               goal={celebrated}
               level={celebration!.level}
               isGoalComplete={celebration!.level === milestones(celebrated).length}
+              origin={celebration!.origin}
               onShare={() => {
                 closeCelebration(false);
                 setToast("Shared");
                 setTimeout(() => setToast(null), 2200);
               }}
-              onDashboard={() => closeCelebration(true)}
+              /* Replay came from the goal, so it goes back to the goal. Earning
+                 one is the end of a task, so it hands you to the list. */
+              onDismiss={() => closeCelebration(celebration!.origin === "earned")}
             />
           )}
         </AnimatePresence>

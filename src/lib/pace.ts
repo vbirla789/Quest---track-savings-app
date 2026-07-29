@@ -1,4 +1,4 @@
-import type { Goal } from "../data";
+import type { Cycle, Goal } from "../data";
 import { parseLocalDate } from "./dates";
 
 /* ----------------------------------------------------------------------------
@@ -173,40 +173,81 @@ export function milestones(goal: Goal): Milestone[] {
   }));
 }
 
-export type StreakMonth = { label: string; hit: boolean; current: boolean };
+export type StreakPeriod = { label: string; hit: boolean; current: boolean };
+
+/** Cells per grid, and how many go in each of the two rows. */
+const CYCLE_GRID: Record<Cycle, { count: number; perRow: number }> = {
+  daily: { count: 14, perRow: 7 },
+  weekly: { count: 12, perRow: 6 },
+  monthly: { count: 12, perRow: 6 },
+};
+
+export const cycleGrid = (cycle: Cycle) => CYCLE_GRID[cycle];
+
+/** "day" / "week" / "month", for the streak pill. */
+export const CYCLE_NOUN: Record<Cycle, string> = {
+  daily: "day",
+  weekly: "week",
+  monthly: "month",
+};
+
+const DAY_LABELS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
 /**
- * Did this goal receive anything in each of the last `count` months?
+ * Did this goal receive anything in each of the last N periods?
  *
- * The grid is real history rather than decoration, which also means the streak
- * count below it can be derived instead of asserted.
+ * The period is the goal's own cycle, so a weekly saver is judged on weeks and a
+ * monthly one on months — scoring a daily saver against calendar months would
+ * call a perfect month a single hit.
  */
-export function streakMonths(goal: Goal, count = 12): StreakMonth[] {
+export function streakPeriods(goal: Goal, count?: number): StreakPeriod[] {
+  const { count: n } = CYCLE_GRID[goal.cycle];
+  const total = count ?? n;
   const now = new Date();
-  const out: StreakMonth[] = [];
-  for (let back = count - 1; back >= 0; back--) {
-    const month = new Date(now.getFullYear(), now.getMonth() - back, 1);
-    const hit = goal.contributions.some((c) => {
-      const d = new Date();
-      d.setDate(d.getDate() - c.daysAgo);
-      return d.getFullYear() === month.getFullYear() && d.getMonth() === month.getMonth();
-    });
-    out.push({
-      label: month.toLocaleDateString("en-GB", { month: "short" }).slice(0, 3).toUpperCase(),
-      hit,
-      current: back === 0,
-    });
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const out: StreakPeriod[] = [];
+
+  const dayOf = (c: { daysAgo: number }) => {
+    const d = new Date(today);
+    d.setDate(d.getDate() - c.daysAgo);
+    return d;
+  };
+
+  for (let back = total - 1; back >= 0; back--) {
+    let label: string;
+    let hit: boolean;
+
+    if (goal.cycle === "monthly") {
+      const m = new Date(now.getFullYear(), now.getMonth() - back, 1);
+      label = m.toLocaleDateString("en-GB", { month: "short" }).slice(0, 3).toUpperCase();
+      hit = goal.contributions.some((c) => {
+        const d = dayOf(c);
+        return d.getFullYear() === m.getFullYear() && d.getMonth() === m.getMonth();
+      });
+    } else if (goal.cycle === "weekly") {
+      label = `WEEK ${total - back}`;
+      hit = goal.contributions.some(
+        (c) => Math.floor(c.daysAgo / 7) === back,
+      );
+    } else {
+      const d = new Date(today);
+      d.setDate(d.getDate() - back);
+      label = DAY_LABELS[d.getDay()];
+      hit = goal.contributions.some((c) => c.daysAgo === back);
+    }
+
+    out.push({ label, hit, current: back === 0 });
   }
   return out;
 }
 
-/** Consecutive months with a contribution, counting back from the last one. */
+/** Consecutive periods with a contribution, counting back from the most recent. */
 export function streakLength(goal: Goal): number {
-  const months = streakMonths(goal, 24);
+  const periods = streakPeriods(goal, CYCLE_GRID[goal.cycle].count * 2);
   let run = 0;
-  for (let i = months.length - 1; i >= 0; i--) {
-    if (months[i].hit) run++;
-    else if (run > 0 || !months[i].current) break;
+  for (let i = periods.length - 1; i >= 0; i--) {
+    if (periods[i].hit) run++;
+    else if (run > 0 || !periods[i].current) break;
   }
   return run;
 }

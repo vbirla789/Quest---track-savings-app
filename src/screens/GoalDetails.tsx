@@ -7,8 +7,10 @@ import {
   milestones,
   paceOf,
   savedBreakdown,
+  CYCLE_NOUN,
+  cycleGrid,
   streakLength,
-  streakMonths,
+  streakPeriods,
   targetDateLabel,
 } from "../lib/pace";
 import Avatar from "../components/Avatar";
@@ -52,7 +54,8 @@ export default function GoalDetails({
   const pace = paceOf(goal);
   const tone = PACE_CARD[pace];
   const marks = milestones(goal);
-  const months = streakMonths(goal);
+  const periods = streakPeriods(goal);
+  const { perRow } = cycleGrid(goal.cycle);
   const streak = streakLength(goal);
   const groups = savedBreakdown(goal);
   const shared = goal.squad.length > 0;
@@ -348,11 +351,11 @@ export default function GoalDetails({
                     stretched it wide. Boxed at the design's inset instead. */}
                 <SysIcon src="/icons/lt-flash.svg" inset="5.21% 21.87%" box={16} />
                 <p className="font-mono text-[12px] font-medium uppercase leading-[1.4]">
-                  {streak} month streak
+                  {streak} {CYCLE_NOUN[goal.cycle]} streak
                 </p>
               </div>
               <div className="flex w-full flex-col items-start gap-5">
-                {[months.slice(0, 6), months.slice(6)].map((row, r) => (
+                {[periods.slice(0, perRow), periods.slice(perRow)].map((row, r) => (
                   <div key={r} className="flex w-full flex-col items-start gap-4">
                     <div className="flex w-full items-start justify-between px-1 font-mono text-[12px] font-medium uppercase leading-[1.4] text-[#b6b6b6]">
                       {row.map((m, i) => (

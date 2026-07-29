@@ -143,7 +143,9 @@ export default function EditQuest({
               className="grid size-10 place-items-center rounded-full border border-[#ebebeb] bg-white active:scale-95"
               style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.04))" }}
             >
-              <img src="/icons/lt-arrow-down.svg" alt="" className="size-5 rotate-90" />
+              {/* Down, not back: this is a sheet that rose from the bottom, so
+                  it dismisses the way it arrived — same control as the detail. */}
+              <img src="/icons/lt-arrow-down.svg" alt="" className="size-5" />
             </button>
           </div>
 
