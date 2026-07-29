@@ -161,7 +161,7 @@ export default function MonthlyChart({
               transition={{ duration: 0.28, ease: [0.23, 1, 0.32, 1] }}
             >
               <span
-                className="shrink-0 whitespace-nowrap rounded-[3px] bg-white px-2 py-1 font-mono text-[12px] font-medium uppercase leading-[1.4] text-black"
+                className="-mb-[3px] shrink-0 whitespace-nowrap rounded-[3px] bg-white px-2 py-1 font-mono text-[12px] font-medium uppercase leading-[1.4] text-black"
                 style={{
                   filter:
                     "drop-shadow(0 1px 0 rgba(0,0,0,0.25)) drop-shadow(0 1px 2px rgba(0,0,0,0.12))",

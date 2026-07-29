@@ -72,8 +72,10 @@ export default function GoalDetails({
   const lastEarned = marks.reduce((acc, m, i) => (m.earned ? i : acc), -1);
   const railPct = lastEarned < 0 ? 0 : (lastEarned / (marks.length - 1)) * 100;
 
+  /* Solid #feffff, not the dot paper: this sheet rises over the dashboard, and a
+     shared texture would blur the boundary between the two surfaces. */
   return (
-    <div className="dot-paper relative h-full overflow-hidden text-black">
+    <div className="relative h-full overflow-hidden bg-[#feffff] text-black">
       <div className="phone-scroll safe-top h-full overflow-y-auto pb-20">
         <StatusBar theme="light" />
 
@@ -189,8 +191,10 @@ export default function GoalDetails({
                   animate={{ left: `calc(${Math.min(92, Math.max(0, pct - 7))}%)` }}
                   transition={{ duration: 0.7, ease: [0.23, 1, 0.32, 1] }}
                 >
+                  {/* -3px so the pill sits over the caret: drawn flush they
+                      leave a visible seam where the two shadows meet. */}
                   <span
-                    className="w-12 rounded-[3px] bg-white py-1 text-center font-mono text-[12px] font-medium uppercase leading-[1.4] text-black"
+                    className="-mb-[3px] w-12 rounded-[3px] bg-white py-1 text-center font-mono text-[12px] font-medium uppercase leading-[1.4] text-black"
                     style={{
                       filter:
                         "drop-shadow(0 2px 0 rgba(0,0,0,0.25)) drop-shadow(0 1px 2px rgba(0,0,0,0.12))",
@@ -262,8 +266,11 @@ export default function GoalDetails({
           {/* milestones */}
           <div className="flex w-full flex-col items-start gap-6">
             <h2 className={H2}>Milestones</h2>
-            <div className="relative flex w-full items-start gap-8 pb-2.5 pt-3">
-              <div className="absolute left-1/2 top-[24px] h-1 w-[275px] -translate-x-1/2 overflow-hidden rounded-full bg-[#ececec]">
+            <div className="flex w-full pb-2.5 pt-3">
+            <div className="relative flex w-full items-start gap-8">
+              {/* BADGE_H / 2 - rail/2 — measured off the badge row, not the
+                  padded wrapper, which is what had it riding high. */}
+              <div className="absolute left-1/2 top-[26px] h-1 w-[275px] -translate-x-1/2 overflow-hidden rounded-full bg-[#ececec]">
                 <motion.div
                   className="h-full rounded-full"
                   style={{ background: "linear-gradient(to right, #5ee7b7, #00c86a)" }}
@@ -282,6 +289,7 @@ export default function GoalDetails({
                   </p>
                 </div>
               ))}
+            </div>
             </div>
           </div>
 
@@ -319,7 +327,7 @@ export default function GoalDetails({
                           key={i}
                           src={m.hit ? "/icons/lt-check-filled.svg" : "/icons/lt-check.svg"}
                           alt=""
-                          className="relative size-6"
+                          className="relative size-5"
                         />
                       ))}
                     </div>

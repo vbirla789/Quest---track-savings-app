@@ -228,7 +228,11 @@ export default function App() {
 
   const screens = (
     <>
-        {/* A card stack, not a swap. The dashboard is the root and stays mounted;
+        {/* A card stack, not a swap. Layer order matters here: the dashboard's
+            own sticky header is z-30, so a presented sheet has to sit above that
+            or the header punches through and you get the dashboard's controls
+            floating over the detail screen. Ladder: dashboard header 30, detail
+            40, edit 45, bottom sheets 50, picker/level-up 60, toast 70. The dashboard is the root and stays mounted;
             detail rises over it and edit rises over detail, each dismissed by the
             chevron-down in its own header. That's what the down-chevron promises,
             and it's why these can't share an AnimatePresence with mode="wait" —
@@ -248,7 +252,7 @@ export default function App() {
           {(view === "details" || view === "edit") && selected && (
             <motion.div
               key="details"
-              className="absolute inset-0 z-20"
+              className="absolute inset-0 z-40"
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
@@ -269,7 +273,7 @@ export default function App() {
           {view === "edit" && selected && (
             <motion.div
               key="edit"
-              className="absolute inset-0 z-30"
+              className="absolute inset-0 z-[45]"
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}

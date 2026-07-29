@@ -119,7 +119,7 @@ export default function EditQuest({
   );
 
   return (
-    <div className="dot-paper relative h-full overflow-hidden text-black">
+    <div className="relative h-full overflow-hidden bg-[#feffff] text-black">
       <div
         ref={scrollRef}
         className="phone-scroll safe-top h-full overflow-y-auto"
