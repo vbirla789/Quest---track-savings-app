@@ -106,7 +106,7 @@ export type MonthBucket = { label: string; amount: number; recent: boolean };
  * Bucketed on the real calendar rather than fixed 30-day windows, so a bar
  * labelled MAR contains exactly what March contains.
  */
-export function monthlyTotals(goals: Goal[], months = 6): MonthBucket[] {
+export function monthlyTotals(goals: Goal[], months = 12): MonthBucket[] {
   const now = new Date();
   const slots = new Map<string, number>();
   const buckets: MonthBucket[] = [];
@@ -115,7 +115,12 @@ export function monthlyTotals(goals: Goal[], months = 6): MonthBucket[] {
     const d = new Date(now.getFullYear(), now.getMonth() - back, 1);
     slots.set(`${d.getFullYear()}-${d.getMonth()}`, buckets.length);
     buckets.push({
-      label: back === 0 ? "RECENT" : d.toLocaleDateString("en-GB", { month: "short" }).toUpperCase(),
+      /* Sliced to three: en-GB abbreviates September as "Sept", which is one
+         character wider than every other label and breaks the axis rhythm. */
+      label:
+        back === 0
+          ? "RECENT"
+          : d.toLocaleDateString("en-GB", { month: "short" }).slice(0, 3).toUpperCase(),
       amount: 0,
       recent: back === 0,
     });
@@ -126,8 +131,11 @@ export function monthlyTotals(goals: Goal[], months = 6): MonthBucket[] {
       const d = new Date();
       d.setDate(d.getDate() - c.daysAgo);
       const slot = slots.get(`${d.getFullYear()}-${d.getMonth()}`);
-      if (slot !== undefined) buckets[slot].amount += c.amount;
+      if (slot !== undefined && slot !== buckets.length - 1) buckets[slot].amount += c.amount;
     }
   }
+  /* RECENT is the same 14-day window the headline reports, not the calendar
+     month to date — otherwise the bar and the number above it disagree. */
+  buckets[buckets.length - 1].amount = recentTotal(goals, 14);
   return buckets;
 }

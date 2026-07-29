@@ -8,7 +8,6 @@ import {
   monthlyTotals,
   overallPace,
   paceOf,
-  recentTotal,
   timeLabel,
   type Pace,
 } from "../lib/pace";
@@ -98,8 +97,12 @@ export default function Dashboard({
   /* One masking rule across the screen: rupee figures go, shapes and percentages
      stay. Hiding a balance is about not publishing absolute amounts — blanking
      the bars as well would leave nothing to look at. */
-  const windowTotal = recentTotal(goals, 14);
   const months = monthlyTotals(goals);
+  /* Tapping a bar retargets the readout above it, so the big number always
+     names what you're pointing at. Defaults to the most recent column. */
+  const [monthIdx, setMonthIdx] = useState(months.length - 1);
+  const picked = months[Math.min(monthIdx, months.length - 1)];
+  const isRecent = picked?.recent ?? true;
 
   return (
     <div className="dot-paper relative h-full overflow-hidden text-black">
@@ -158,7 +161,11 @@ export default function Dashboard({
               <div ref={readoutRef} className="flex flex-col items-center gap-2">
                 <div className="flex w-[192px] flex-col items-center gap-1 whitespace-nowrap">
                   <p className={`${LABEL} uppercase text-[#a3a3a3]`}>
-                    {tab === "total" ? "Total saved" : "Saved last 14 days"}
+                    {tab === "total"
+                      ? "Total saved"
+                      : isRecent
+                        ? "Saved last 14 days"
+                        : `Saved in ${picked.label}`}
                   </p>
                   {hidden ? (
                     /* ₹ stays, the digits become dots — the currency still reads
@@ -173,7 +180,7 @@ export default function Dashboard({
                     </div>
                   ) : (
                     <p className="font-serif text-[40px] font-semibold leading-[1.3] tnum">
-                      ₹{inrPlain(tab === "total" ? animatedTotal : windowTotal)}
+                      ₹{inrPlain(tab === "total" ? animatedTotal : picked.amount)}
                     </p>
                   )}
                 </div>
@@ -192,7 +199,7 @@ export default function Dashboard({
               {/* Both tabs' visuals live in one fixed-height box so switching
                   can't shift the CTAs and goals below. The chart needs the full
                   column width, the coin is 173px wide and centred. */}
-              <div className="relative h-[192px] w-full">
+              <div className="relative h-[224px] w-full">
                 {/* No `mode="wait"` — both branches are absolutely positioned in
                     this box, so they cross-fade in place. Serialising them
                     doubled the switch latency and, if you tapped the segments
@@ -201,7 +208,10 @@ export default function Dashboard({
                   {tab === "total" ? (
                     <motion.div
                       key="coin"
-                      className="absolute inset-y-0 left-1/2 w-[173px] -translate-x-1/2 overflow-hidden"
+                      /* Fixed 173x184 and centred, not stretched to the box: the
+                         box is sized for the taller chart, and filling it
+                         distorted the coin's aspect ratio. */
+                      className="absolute left-1/2 top-1/2 h-[184px] w-[173px] -translate-x-1/2 -translate-y-1/2 overflow-hidden"
                       initial={{ opacity: 0, scale: 0.94 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.94 }}
@@ -226,7 +236,12 @@ export default function Dashboard({
                       exit={{ opacity: 0, scale: 0.98 }}
                       transition={{ duration: 0.24, ease: [0.23, 1, 0.32, 1] }}
                     >
-                      <MonthlyChart buckets={months} hidden={hidden} />
+                      <MonthlyChart
+                        buckets={months}
+                        selected={Math.min(monthIdx, months.length - 1)}
+                        onSelect={setMonthIdx}
+                        hidden={hidden}
+                      />
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -328,8 +343,10 @@ function PaceDot({ pace }: { pace: Pace }) {
   return (
     <span className="grid size-4 place-items-center">
       <span className="flex rounded-full p-[2px]" style={{ background: halo }}>
+        {/* No ring: the export carries a black 1.29px stroke, which on an 8px
+            dot eats most of the colour. */}
         <span
-          className="size-2 rounded-full border-[1.289px] border-black"
+          className="size-2 rounded-full"
           style={{ background: dot, boxShadow: "inset 0 2.578px 0 0 rgba(255,255,255,0.35)" }}
         />
       </span>
@@ -375,11 +392,23 @@ function GoalCard({
 
       <div className="flex w-full flex-col gap-3">
         <div className="flex w-full items-center justify-between whitespace-nowrap">
-          <p className="font-serif text-[16px] font-semibold leading-[1.3] tnum">
-            {hidden
-              ? "₹••••• / ₹•••••"
-              : `₹${inrPlain(goal.saved)} / ₹${inrPlain(goal.target)}`}
-          </p>
+          {hidden ? (
+            /* One currency symbol and six dots for the pair — the design drops
+               the slash and the second ₹, which read as two hidden numbers when
+               there is only one thing being withheld. */
+            <div className="flex items-center gap-3">
+              <span className="font-serif text-[16px] font-semibold leading-[1.3]">₹</span>
+              <span className="flex items-center gap-1.5">
+                {Array.from({ length: 6 }, (_, i) => (
+                  <span key={i} className="size-1.5 rounded-full bg-[#212121]" />
+                ))}
+              </span>
+            </div>
+          ) : (
+            <p className="font-serif text-[16px] font-semibold leading-[1.3] tnum">
+              ₹{inrPlain(goal.saved)} / ₹{inrPlain(goal.target)}
+            </p>
+          )}
           <p className={LABEL} style={{ color: style.text }}>
             {pct}%
           </p>
@@ -398,7 +427,7 @@ function GoalCard({
       {/* social only where the goal is actually shared */}
       {goal.squad.length > 0 && (
         <div className="flex w-full flex-col gap-4">
-          <div className="h-px w-full bg-[#e6e7e7]" />
+          <div className="w-full border-t border-dotted border-[#d8d8d8]" />
           <div className="flex w-full items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="flex items-start">

@@ -108,6 +108,9 @@ export const GOALS: Goal[] = [
       { id: "l7", categoryId: "roundup", source: "roundup", label: "Round-ups", amount: 640, daysAgo: daysAgoIn(3, 12) },
       { id: "l8", categoryId: "cashback", source: "boost", label: "Cashback", amount: 2100, daysAgo: daysAgoIn(4, 9) },
       { id: "l9", categoryId: "cooked", source: "skip", label: "Cooked in", amount: 1250, daysAgo: daysAgoIn(5, 15) },
+      { id: "l10", categoryId: "roundup", source: "roundup", label: "Round-ups", amount: 520, daysAgo: daysAgoIn(6, 17) },
+      { id: "l11", categoryId: "cooked", source: "skip", label: "Cooked in", amount: 780, daysAgo: daysAgoIn(7, 8) },
+      { id: "l12", categoryId: "cashback", source: "boost", label: "Cashback", amount: 430, daysAgo: daysAgoIn(9, 23) },
     ],
   },
   {
@@ -131,6 +134,9 @@ export const GOALS: Goal[] = [
       { id: "i8", categoryId: "bonus", source: "boost", label: "Bonus", amount: 5000, daysAgo: daysAgoIn(3, 27) },
       { id: "i9", categoryId: "cab", source: "skip", label: "Skipped cab", amount: 1180, daysAgo: daysAgoIn(4, 19) },
       { id: "i10", categoryId: "cooked", source: "skip", label: "Cooked in", amount: 2250, daysAgo: daysAgoIn(5, 4) },
+      { id: "i11", categoryId: "roundup", source: "roundup", label: "Round-ups", amount: 610, daysAgo: daysAgoIn(6, 5) },
+      { id: "i12", categoryId: "bonus", source: "boost", label: "Bonus", amount: 1900, daysAgo: daysAgoIn(8, 14) },
+      { id: "i13", categoryId: "cab", source: "skip", label: "Skipped cab", amount: 540, daysAgo: daysAgoIn(10, 2) },
     ],
   },
   {
@@ -155,6 +161,9 @@ export const GOALS: Goal[] = [
       { id: "g9", categoryId: "bonus", source: "boost", label: "Bonus", amount: 3800, daysAgo: daysAgoIn(3, 22) },
       { id: "g10", categoryId: "cooked", source: "skip", label: "Cooked in", amount: 1450, daysAgo: daysAgoIn(4, 26) },
       { id: "g11", categoryId: "cab", source: "skip", label: "Skipped cab", amount: 2050, daysAgo: daysAgoIn(5, 10) },
+      { id: "g12", categoryId: "cooked", source: "skip", label: "Cooked in", amount: 900, daysAgo: daysAgoIn(7, 19) },
+      { id: "g13", categoryId: "roundup", source: "roundup", label: "Round-ups", amount: 340, daysAgo: daysAgoIn(9, 6) },
+      { id: "g14", categoryId: "cashback", source: "boost", label: "Cashback", amount: 1100, daysAgo: daysAgoIn(11, 12) },
     ],
   },
 ];
