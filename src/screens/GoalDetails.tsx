@@ -33,6 +33,7 @@ export default function GoalDetails({
   onBack,
   onStashMoney,
   onNudgeSquad,
+  onAddFriends,
   onEdit,
   onDelete,
 }: {
@@ -40,6 +41,7 @@ export default function GoalDetails({
   onBack: () => void;
   onStashMoney: () => void;
   onNudgeSquad: () => void;
+  onAddFriends: () => void;
   onEdit: () => void;
   onDelete: () => void;
 }) {
@@ -50,6 +52,7 @@ export default function GoalDetails({
   const months = streakMonths(goal);
   const streak = streakLength(goal);
   const groups = savedBreakdown(goal);
+  const shared = goal.squad.length > 0;
 
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -198,14 +201,17 @@ export default function GoalDetails({
 
             {/* actions */}
             <div className="flex w-full items-center gap-3">
+              {/* Shared goals nudge, solo goals invite. "Nudge friends" wrapped
+                  to two lines and broke the row's height, and a plus icon reads
+                  as "add" — wrong verb once the squad exists. */}
               <button
-                onClick={onNudgeSquad}
-                className="flex h-10 flex-1 items-center justify-center gap-2 rounded-[2px] border border-[#c7c8c8] bg-white px-5 active:scale-[0.99]"
+                onClick={shared ? onNudgeSquad : onAddFriends}
+                className="flex h-10 flex-1 items-center justify-center gap-2 overflow-hidden rounded-[2px] border border-[#c7c8c8] bg-white px-5 active:scale-[0.99]"
                 style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.06))" }}
               >
-                <img src="/icons/lt-add.svg" alt="" className="size-[18px]" />
-                <span className={`${MONO} uppercase`}>
-                  {goal.squad.length > 0 ? "Nudge friends" : "Add friends"}
+                {!shared && <img src="/icons/lt-add.svg" alt="" className="size-[18px]" />}
+                <span className={`${MONO} whitespace-nowrap uppercase`}>
+                  {shared ? "Nudge" : "Add friends"}
                 </span>
               </button>
               <button

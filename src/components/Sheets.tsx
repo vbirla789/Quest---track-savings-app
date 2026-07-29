@@ -188,7 +188,7 @@ function sixMonthsOut() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-/* Creation only. Editing an existing quest is a full screen (EditQuest) — a
+/* Creation only. Editing an existing goal is a full screen (EditQuest) — a
    wizard is right for a funnel, wrong for changing one prefilled field. */
 export function NewQuestSheet({
   onClose,
@@ -207,11 +207,11 @@ export function NewQuestSheet({
 
   const steps = [
     {
-      label: "Quest name",
+      label: "Goal name",
       cta: "Continue",
       valid: name.trim().length > 0,
       field: (
-        <Field value={name} onChange={setName} placeholder="eg. Ladakh ride" />
+        <Field value={name} onChange={setName} placeholder="e.g. Ladakh ride" />
       ),
       accessory: (
         <Keyboard
@@ -244,7 +244,7 @@ export function NewQuestSheet({
     },
     {
       label: "Target date",
-      cta: "Start quest",
+      cta: "Start goal",
       valid: date !== "",
       field: (
         <input
@@ -327,7 +327,7 @@ export function StashSheet({
 
   const steps = [
     {
-      label: "Add to which quest?",
+      label: "Add to which goal?",
       cta: "Continue",
       valid: goalId !== "",
       accessory: undefined,
@@ -347,7 +347,7 @@ export function StashSheet({
             {chosen ? (
               <span className="flex-1 font-mono text-[14px] font-medium text-black">{chosen.name}</span>
             ) : (
-              <span className="flex-1 font-mono text-[14px] text-[#a3a3a3]">Select a quest</span>
+              <span className="flex-1 font-mono text-[14px] text-[#a3a3a3]">Select a goal</span>
             )}
             <MaskIcon
               src="/icons/chevron-left.svg"

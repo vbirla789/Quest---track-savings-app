@@ -4,17 +4,16 @@ import type { Goal } from "../data";
 import { inrPlain } from "../lib/format";
 import { DateWheel, Keyboard } from "../components/Keyboard";
 import StatusBar from "../components/StatusBar";
-import SysIcon from "../components/SysIcon";
 
 /* ----------------------------------------------------------------------------
- * Editing a quest gets its own screen rather than the creation sheet.
+ * Editing a goal gets its own screen rather than the creation sheet.
  *
  * Creating is a funnel — one question at a time keeps it light. Editing is the
  * opposite job: you arrive wanting to change one specific thing, so every field
  * is on screen, prefilled, and directly reachable.
  *
  * Nothing is focused on arrival: the screen opens as a plain read-out of the
- * quest. The keyboard, keypad or date wheel only appears once you tap the field
+ * goal. The keyboard, keypad or date wheel only appears once you tap the field
  * it belongs to, so landing here doesn't feel like being handed a form.
  * --------------------------------------------------------------------------*/
 
@@ -22,9 +21,15 @@ type FieldKey = "name" | "amount" | "date";
 
 const EASE_DRAWER = [0.32, 0.72, 0, 1] as [number, number, number, number];
 
-const FIELD =
-  "w-full rounded-[16px] bg-elev p-4 text-left text-[14px] font-medium leading-[1.4] text-white caret-lime outline-none transition-shadow placeholder:font-normal placeholder:text-ink-dim";
-const ACTIVE_RING = "shadow-[0_0_0_1.5px_var(--color-lime)]";
+/* Light system, same tokens as the sheets: #f9f9fb fill, #e6e7e7 hairline, 4px
+   on the field, blue for the active ring. */
+const FIELD_BASE =
+  "w-full rounded-[4px] border border-[#e6e7e7] bg-[#f9f9fb] p-4 text-left caret-black outline-none transition-shadow placeholder:text-[#a3a3a3]";
+const FIELD = `${FIELD_BASE} font-mono text-[14px] font-medium leading-[1.4] text-black`;
+/* Money is serif everywhere in this system, including where you type it. */
+const FIELD_MONEY = `${FIELD_BASE} font-serif text-[16px] font-semibold leading-[1.3] text-black tnum`;
+const ACTIVE_RING = "shadow-[0_0_0_1.5px_#0a59ff]";
+const MONO = "font-mono text-[14px] font-medium leading-[1.4]";
 
 export default function EditQuest({
   goal,
@@ -108,13 +113,13 @@ export default function EditQuest({
       onBackspace={() => setAmount((a) => a.slice(0, -1))}
     />
   ) : (
-    <div className="w-full rounded-t-[25px] bg-card px-4 pb-6 pt-2">
-      <DateWheel value={date} onChange={setDate} theme="dark" />
+    <div className="w-full rounded-t-[12px] border-t border-[#e6e7e7] bg-white px-4 pb-6 pt-2">
+      <DateWheel value={date} onChange={setDate} />
     </div>
   );
 
   return (
-    <div className="relative h-full overflow-hidden bg-canvas">
+    <div className="dot-paper relative h-full overflow-hidden text-black">
       <div
         ref={scrollRef}
         className="phone-scroll safe-top h-full overflow-y-auto"
@@ -126,25 +131,26 @@ export default function EditQuest({
         }}
         style={{ paddingBottom: bottomPad }}
       >
-        <StatusBar />
+        <StatusBar theme="light" />
 
-        <div className="flex flex-col gap-6 px-4 pt-4">
-          {/* header */}
+        <div className="flex flex-col gap-6 px-5 pt-1">
+          {/* Header matches the detail screen: a circle control, then the title
+              as a section heading rather than centred nav-bar text. */}
           <div className="flex w-full items-center justify-between">
             <button
               onClick={onCancel}
               aria-label="Back"
-              className="surface-card grid size-10 place-items-center rounded-full active:scale-95"
+              className="grid size-10 place-items-center rounded-full border border-[#ebebeb] bg-white active:scale-95"
+              style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.04))" }}
             >
-              <SysIcon src="/icons/chevron-left.svg" inset="21.88% 38.54% 21.88% 30.21%" box={20} />
+              <img src="/icons/lt-arrow-down.svg" alt="" className="size-5 rotate-90" />
             </button>
-            <span className="text-[18px] font-semibold leading-[1.3]">Edit quest</span>
-            {/* keeps the title optically centred against the back button */}
-            <span className="size-10" />
           </div>
 
+          <h1 className="font-serif text-[20px] font-medium leading-[1.3]">Edit goal</h1>
+
           <div className="flex flex-col gap-5">
-            <Row label="Quest name" innerRef={(el) => (rowRefs.current.name = el)}>
+            <Row label="Goal name" innerRef={(el) => (rowRefs.current.name = el)}>
               <input
                 ref={nameRef}
                 data-field
@@ -153,7 +159,7 @@ export default function EditQuest({
                 onFocus={() => setActive("name")}
                 onPointerDown={() => open("name")}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="eg. Ladakh ride"
+                placeholder="e.g. Ladakh ride"
                 className={`${FIELD} ${active === "name" ? ACTIVE_RING : ""}`}
               />
             </Row>
@@ -168,7 +174,7 @@ export default function EditQuest({
                 onPointerDown={() => open("amount")}
                 onChange={(e) => setAmount(e.target.value.replace(/\D/g, "").slice(0, 9))}
                 placeholder="₹50,000"
-                className={`${FIELD} tnum ${active === "amount" ? ACTIVE_RING : ""}`}
+                className={`${FIELD_MONEY} ${active === "amount" ? ACTIVE_RING : ""}`}
               />
             </Row>
 
@@ -179,7 +185,7 @@ export default function EditQuest({
                 data-field
                 onPointerDown={() => open("date")}
                 className={`${FIELD} tnum ${active === "date" ? ACTIVE_RING : ""} ${
-                  date ? "" : "font-normal text-ink-dim"
+                  date ? "" : "text-[#a3a3a3]"
                 }`}
               >
                 {date ? new Date(date).toLocaleDateString("en-GB") : "DD/MM/YYYY"}
@@ -194,19 +200,19 @@ export default function EditQuest({
       <div ref={bottomRef} className="absolute inset-x-0 bottom-0 z-40">
         <div
           className={`px-4 pt-3 ${
-            active ? "bg-canvas pb-3" : "safe-bottom bg-gradient-to-b from-transparent to-black to-60% pb-4 sm:pb-8"
+            active ? "bg-white pb-3" : "safe-bottom bg-gradient-to-b from-transparent to-white to-60% pb-4 sm:pb-8"
           }`}
         >
           <button
             disabled={!valid}
             onClick={() => valid && onSave({ name: name.trim(), target, targetDate: date })}
-            className="h-12 w-full rounded-full bg-lime text-[16px] font-semibold text-black transition-opacity active:scale-[0.98] disabled:opacity-60 disabled:active:scale-100"
+            className={`${MONO} h-12 w-full rounded-[2px] border border-[#8f8f8f] bg-black uppercase text-white transition-opacity active:scale-[0.98] disabled:opacity-40 disabled:active:scale-100`}
           >
             Save changes
           </button>
           {!active && (
             <div className="faux-home-bar absolute inset-x-0 bottom-0 flex justify-center pb-2 pt-3">
-              <div className="h-[5px] w-[124px] rounded-lg bg-white" />
+              <div className="h-[5px] w-[124px] rounded-lg bg-black" />
             </div>
           )}
         </div>
@@ -240,7 +246,7 @@ function Row({
 }) {
   return (
     <div ref={innerRef} className="flex flex-col gap-2">
-      <span className="text-[14px] text-ink-dim">{label}</span>
+      <span className="font-mono text-[12px] font-medium uppercase leading-[1.4] text-[#a3a3a3]">{label}</span>
       {children}
     </div>
   );

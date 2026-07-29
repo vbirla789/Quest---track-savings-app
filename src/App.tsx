@@ -6,8 +6,10 @@ import {
   type Contribution,
   type ContributionSource,
   type Goal,
+  type SquadMember,
 } from "./data";
 import PhoneFrame from "./components/PhoneFrame";
+import ContactPicker from "./components/ContactPicker";
 import { NewQuestSheet, StashSheet } from "./components/Sheets";
 import Dashboard from "./screens/Dashboard";
 import EditQuest from "./screens/EditQuest";
@@ -15,7 +17,7 @@ import GoalDetails from "./screens/GoalDetails";
 import LevelUp from "./screens/LevelUp";
 
 type View = "dashboard" | "details" | "edit";
-type SheetKind = "quest" | "stash" | null;
+type SheetKind = "quest" | "stash" | "contacts" | null;
 
 /* Shrink the phone to fit small desktop windows while keeping it 1:1 on a
    roomy screen. Outer phone box ≈ 400×854 + a little breathing room. */
@@ -101,7 +103,7 @@ export default function App() {
   }
 
   function nudge(name: string) {
-    setToast(`Nudged ${name} 👋 keep saving!`);
+    setToast(`Nudged ${name}`);
     setTimeout(() => setToast(null), 2200);
   }
 
@@ -139,7 +141,7 @@ export default function App() {
       ...goals, // newest quest sits at the top of the stack
     ]);
     setSheet(null);
-    setToast(`Quest started — ${name}`);
+    setToast(`Goal started · ${name}`);
     setTimeout(() => setToast(null), 2200);
   }
 
@@ -169,7 +171,7 @@ export default function App() {
       ),
     );
     setView("details");
-    setToast("Quest updated ✅");
+    setToast("Goal updated");
     setTimeout(() => setToast(null), 2200);
   }
 
@@ -178,7 +180,7 @@ export default function App() {
     setGoals(goals.filter((g) => g.id !== selectedId));
     setView("dashboard");
     setSelectedId(null);
-    setToast(`Deleted ${gone?.name ?? "quest"}`);
+    setToast(`Deleted ${gone?.name ?? "goal"}`);
     setTimeout(() => setToast(null), 2200);
   }
 
@@ -192,9 +194,23 @@ export default function App() {
     const g = goals.find((x) => x.id === goalId);
     const completes = g && g.saved + amount >= g.target;
     if (!completes) {
-      setToast(`Stashed ₹${amount.toLocaleString("en-IN")} to ${g?.name ?? "quest"} ⚡`);
+      setToast(`Added ₹${amount.toLocaleString("en-IN")} to ${g?.name ?? "goal"}`);
       setTimeout(() => setToast(null), 2200);
     }
+  }
+
+  function addFriends(picked: SquadMember[]) {
+    setSheet(null);
+    if (picked.length === 0) return;
+    setGoals(
+      goals.map((g) =>
+        g.id === selectedId ? { ...g, squad: [...g.squad, ...picked] } : g,
+      ),
+    );
+    const label =
+      picked.length === 1 ? picked[0].name.split(/\s+/)[0] : `${picked.length} friends`;
+    setToast(`Added ${label}`);
+    setTimeout(() => setToast(null), 2200);
   }
 
   function closeCelebration() {
@@ -242,6 +258,7 @@ export default function App() {
                 onBack={() => setView("dashboard")}
                 onStashMoney={() => setSheet("stash")}
                 onNudgeSquad={() => nudge("your squad")}
+                onAddFriends={() => setSheet("contacts")}
                 onEdit={() => setView("edit")}
                 onDelete={deleteQuest}
               />
@@ -271,6 +288,14 @@ export default function App() {
           {sheet === "quest" && (
             <NewQuestSheet key="quest" onClose={() => setSheet(null)} onSubmit={createQuest} />
           )}
+          {sheet === "contacts" && selected && (
+            <ContactPicker
+              key="contacts"
+              alreadyAdded={selected.squad}
+              onClose={() => setSheet(null)}
+              onAdd={addFriends}
+            />
+          )}
           {sheet === "stash" && (
             <StashSheet
               key="stash"
@@ -286,11 +311,16 @@ export default function App() {
         <AnimatePresence>
           {toast && (
             <motion.div
-              className="absolute inset-x-0 top-16 z-[70] mx-auto w-fit rounded-full bg-lime px-4 py-2 text-[13px] font-bold text-black"
-              initial={{ opacity: 0, y: -16, scale: 0.9 }}
+              /* Light system: the streak pill's shape and type, with a heavier
+                 shadow so it reads as floating over content rather than sitting
+                 in it. No emoji — mono at 12px has no room for them and the rest
+                 of this system doesn't use any. */
+              className="absolute inset-x-0 top-16 z-[70] mx-auto w-fit max-w-[85%] rounded-[50px] border border-[#ebebeb] bg-white px-4 py-2.5 text-center font-mono text-[12px] font-medium uppercase leading-[1.4] text-black"
+              style={{ filter: "drop-shadow(0 6px 16px rgba(0,0,0,0.10))" }}
+              initial={{ opacity: 0, y: -14, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -16, scale: 0.9 }}
-              transition={{ type: "spring", stiffness: 300, damping: 22 }}
+              exit={{ opacity: 0, y: -14, scale: 0.96 }}
+              transition={{ duration: 0.28, ease: [0.23, 1, 0.32, 1] }}
             >
               {toast}
             </motion.div>

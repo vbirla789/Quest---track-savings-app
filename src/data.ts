@@ -37,9 +37,16 @@ export type Goal = {
   deadline: string;
   /** ISO yyyy-mm-dd, kept so the edit sheet can prefill the date wheel */
   targetDate?: string;
-  squad: string[]; // avatar image paths of friends saving toward the same goal
+  squad: SquadMember[]; // friends saving toward the same goal
   contributions: Contribution[];
 };
+
+/**
+ * A squad member is a name plus an optional photo — contacts picked from the
+ * phone often have no picture, and the avatar falls back to initials the way iOS
+ * does. Storing bare image paths couldn't express that.
+ */
+export type SquadMember = { name: string; avatar?: string };
 
 export type Friend = {
   id: string;
@@ -167,7 +174,11 @@ export const GOALS: Goal[] = [
     streakWeeks: 20,
     deadline: monthYear(GOA_DUE),
     targetDate: GOA_DUE,
-    squad: ["/avatars/arthur.png", "/avatars/wei.png", "/avatars/natalia.png"],
+    squad: [
+      { name: "Aarav", avatar: "/avatars/arthur.png" },
+      { name: "Kabir", avatar: "/avatars/wei.png" },
+      { name: "Diya", avatar: "/avatars/natalia.png" },
+    ],
     contributions: [
       { id: "g1", categoryId: "cooked", source: "skip", label: "Cooked in", amount: 320, daysAgo: 0 },
       { id: "g2", categoryId: "roundup", source: "roundup", label: "Round-ups", amount: 148, daysAgo: 1 },
@@ -225,3 +236,24 @@ export function daysToGoal(goal: Goal) {
   const weeks = weeksToGoal(goal);
   return weeks === Infinity ? Infinity : weeks * 7;
 }
+
+/**
+ * Stand-in for the phone's address book, for the contact picker.
+ *
+ * Most entries deliberately have no photo — that's the common case, and it's
+ * what exercises the initials fallback.
+ */
+export const CONTACTS: SquadMember[] = [
+  { name: "Aarav Mehta", avatar: "/avatars/arthur.png" },
+  { name: "Ananya Rao" },
+  { name: "Devika Nair" },
+  { name: "Diya Kapoor", avatar: "/avatars/natalia.png" },
+  { name: "Ishaan Verma" },
+  { name: "Kabir Shah", avatar: "/avatars/wei.png" },
+  { name: "Meera Iyer" },
+  { name: "Nikhil Bose" },
+  { name: "Riya Sharma" },
+  { name: "Rohan Gupta" },
+  { name: "Saanvi Joshi" },
+  { name: "Vivaan Reddy" },
+];

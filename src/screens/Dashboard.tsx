@@ -13,6 +13,7 @@ import {
   type Pace,
 } from "../lib/pace";
 import { useCountUp } from "../lib/useCountUp";
+import Avatar from "../components/Avatar";
 import MonthlyChart from "../components/MonthlyChart";
 import StatusBar from "../components/StatusBar";
 
@@ -425,13 +426,8 @@ function GoalCard({
           <div className="flex w-full items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="flex items-start">
-                {goal.squad.map((src, i) => (
-                  <div
-                    key={i}
-                    className="-mr-3 size-8 overflow-hidden rounded-full bg-[#e1e4ea] last:mr-0"
-                  >
-                    <img src={src} alt="" className="size-full object-cover" />
-                  </div>
+                {goal.squad.map((m) => (
+                  <Avatar key={m.name} member={m} size={32} className="-mr-3 last:mr-0" />
                 ))}
               </div>
               <div className="flex flex-col whitespace-nowrap">
