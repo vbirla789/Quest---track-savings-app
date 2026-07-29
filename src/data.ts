@@ -113,21 +113,25 @@ const GOA_DUE = inDays(139);
 
 /* Copy and figures match Figma node 12045:71457. streakWeeks is also what the
    pace maths reads as time elapsed, so each goal is tuned to land in a distinct
-   state: Ladakh ahead, iPhone behind, Goa exactly on pace. */
-export const GOALS: Goal[] = [
+   state: Ladakh ahead, iPhone behind, Goa exactly on pace.
+
+   No `saved` here — it is summed from the ledger below. It used to be its own
+   number and the two drifted: the breakdown's rows added up to ₹7,874 less than
+   Ladakh's hero claimed, in a section literally headed "Savings breakdown". Each
+   goal's ledger is tuned so the sum lands on the figure the design shows. */
+const SEED: Omit<Goal, "saved">[] = [
   {
     id: "ladakh",
     cycle: "monthly",
     name: "Ladakh ride",
     target: 50000,
-    saved: 49000,
     weeklyAutoSave: 2500,
     streakWeeks: 5,
     targetDate: LADAKH_DUE,
     squad: [],
     contributions: [
       { id: "l1", categoryId: "cashback", source: "boost", label: "Cashback", amount: 1500, daysAgo: 1 },
-      { id: "l2", categoryId: "roundup", source: "roundup", label: "Round-ups", amount: 96, daysAgo: 3 },
+      { id: "l2", categoryId: "roundup", source: "roundup", label: "Round-ups", amount: 270, daysAgo: 3 },
       { id: "l3", categoryId: "cooked", source: "skip", label: "Cooked in", amount: 410, daysAgo: 5 },
       { id: "l4", categoryId: "bonus", source: "boost", label: "Bonus", amount: 4200, daysAgo: daysAgoIn(1, 18) },
       { id: "l5", categoryId: "cooked", source: "skip", label: "Cooked in", amount: 1840, daysAgo: daysAgoIn(1, 6) },
@@ -138,7 +142,7 @@ export const GOALS: Goal[] = [
       { id: "l10", categoryId: "roundup", source: "roundup", label: "Round-ups", amount: 520, daysAgo: daysAgoIn(6, 17) },
       { id: "l11", categoryId: "cooked", source: "skip", label: "Cooked in", amount: 780, daysAgo: daysAgoIn(7, 8) },
       { id: "l12", categoryId: "cashback", source: "boost", label: "Cashback", amount: 430, daysAgo: daysAgoIn(9, 23) },
-      ...autoSaves("l", 2400, 11),
+      ...autoSaves("l", 3100, 11),
     ],
   },
   {
@@ -146,14 +150,13 @@ export const GOALS: Goal[] = [
     cycle: "monthly",
     name: "iPhone 17 pro",
     target: 134900,
-    saved: 32400,
     weeklyAutoSave: 3000,
     streakWeeks: 8,
     targetDate: IPHONE_DUE,
     squad: [],
     contributions: [
       { id: "i1", categoryId: "bonus", source: "boost", label: "Bonus", amount: 3000, daysAgo: 1 },
-      { id: "i2", categoryId: "roundup", source: "roundup", label: "Round-ups", amount: 232, daysAgo: 2 },
+      { id: "i2", categoryId: "roundup", source: "roundup", label: "Round-ups", amount: 410, daysAgo: 2 },
       { id: "i3", categoryId: "cooked", source: "skip", label: "Cooked in", amount: 1180, daysAgo: 3 },
       { id: "i4", categoryId: "cab", source: "skip", label: "Skipped cab", amount: 260, daysAgo: 5 },
       { id: "i5", categoryId: "cooked", source: "skip", label: "Cooked in", amount: 2600, daysAgo: daysAgoIn(1, 24) },
@@ -165,7 +168,7 @@ export const GOALS: Goal[] = [
       { id: "i11", categoryId: "roundup", source: "roundup", label: "Round-ups", amount: 610, daysAgo: daysAgoIn(6, 5) },
       { id: "i12", categoryId: "bonus", source: "boost", label: "Bonus", amount: 1900, daysAgo: daysAgoIn(8, 14) },
       { id: "i13", categoryId: "cab", source: "skip", label: "Skipped cab", amount: 540, daysAgo: daysAgoIn(10, 2) },
-      ...autoSaves("i", 2000, 11),
+      ...autoSaves("i", 850, 11),
     ],
   },
   {
@@ -173,7 +176,6 @@ export const GOALS: Goal[] = [
     cycle: "monthly",
     name: "Goa trip",
     target: 50000,
-    saved: 26300,
     weeklyAutoSave: 2500,
     streakWeeks: 20,
     targetDate: GOA_DUE,
@@ -184,7 +186,7 @@ export const GOALS: Goal[] = [
     ],
     contributions: [
       { id: "g1", categoryId: "cooked", source: "skip", label: "Cooked in", amount: 320, daysAgo: 0 },
-      { id: "g2", categoryId: "roundup", source: "roundup", label: "Round-ups", amount: 148, daysAgo: 1 },
+      { id: "g2", categoryId: "roundup", source: "roundup", label: "Round-ups", amount: 370, daysAgo: 1 },
       { id: "g3", categoryId: "cab", source: "skip", label: "Skipped cab", amount: 540, daysAgo: 2 },
       { id: "g4", categoryId: "cashback", source: "boost", label: "Cashback", amount: 1000, daysAgo: 4 },
       { id: "g5", categoryId: "bonus", source: "boost", label: "Bonus", amount: 2500, daysAgo: 6 },
@@ -197,10 +199,23 @@ export const GOALS: Goal[] = [
       { id: "g12", categoryId: "cooked", source: "skip", label: "Cooked in", amount: 900, daysAgo: daysAgoIn(7, 19) },
       { id: "g13", categoryId: "roundup", source: "roundup", label: "Round-ups", amount: 340, daysAgo: daysAgoIn(9, 6) },
       { id: "g14", categoryId: "cashback", source: "boost", label: "Cashback", amount: 1100, daysAgo: daysAgoIn(11, 12) },
-      ...autoSaves("g", 1500, 11),
+      ...autoSaves("g", 600, 11),
     ],
   },
 ];
+
+/**
+ * `saved` is the ledger's total, computed rather than stored.
+ *
+ * The header comment has claimed since day one that "a goal's `saved` is just
+ * the sum of its contributions" — this makes that true. Anything added at
+ * runtime goes through the same path, appending to `contributions`, so the hero
+ * and the breakdown cannot disagree again.
+ */
+export const GOALS: Goal[] = SEED.map((g) => ({
+  ...g,
+  saved: g.contributions.reduce((sum, c) => sum + c.amount, 0),
+}));
 
 export const FRIENDS: Friend[] = [
   { id: "aarav", name: "Aarav", avatar: "/avatars/arthur.png", avatarBg: "#c0d5ff", goal: "Goa trip", progress: 0.9 },

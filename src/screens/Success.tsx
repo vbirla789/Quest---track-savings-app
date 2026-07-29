@@ -56,18 +56,23 @@ export default function Success({
                 {/* Ray burst, drawn rather than shipped: a repeating conic wedge
                     pattern faded out radially. A gradient scales to any badge
                     size and costs nothing to load, where a PNG would need one
-                    export per density. */}
+                    export per density.
+
+                    Deliberately faint — roughly half its old weight. At 0.16 on
+                    a 0.9 mask the wedges peaked around 14% ink and competed with
+                    the badge they exist to frame; the burst should register as
+                    light behind it, not as a second graphic on top. */}
                 <motion.div
                   className="pointer-events-none absolute"
                   style={{
                     width: 380,
                     height: 500,
                     background:
-                      "repeating-conic-gradient(from 4deg, rgba(0,200,106,0.16) 0deg 9deg, rgba(255,255,255,0) 9deg 22.5deg)",
+                      "repeating-conic-gradient(from 4deg, rgba(0,200,106,0.10) 0deg 9deg, rgba(255,255,255,0) 9deg 22.5deg)",
                     maskImage:
-                      "radial-gradient(closest-side, rgba(0,0,0,0.9), rgba(0,0,0,0.35) 55%, transparent 80%)",
+                      "radial-gradient(closest-side, rgba(0,0,0,0.7), rgba(0,0,0,0.22) 55%, transparent 78%)",
                     WebkitMaskImage:
-                      "radial-gradient(closest-side, rgba(0,0,0,0.9), rgba(0,0,0,0.35) 55%, transparent 80%)",
+                      "radial-gradient(closest-side, rgba(0,0,0,0.7), rgba(0,0,0,0.22) 55%, transparent 78%)",
                   }}
                   initial={{ opacity: 0, scale: 0.85 }}
                   animate={{ opacity: 1, scale: 1 }}
