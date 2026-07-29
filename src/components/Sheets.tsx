@@ -354,9 +354,13 @@ export function StashSheet({
   onClose: () => void;
   onStash: (goalId: string, amount: number) => void;
 }) {
+  /* The list only offers goals still short of their target — but the preset is
+     resolved against every goal, because "which quest?" was already answered by
+     opening the sheet from one. Matching it against `active` meant a goal you'd
+     just finished fell through to active[0], so ADD MONEY inside a completed
+     goal asked which goal and preselected a different one. */
   const active = goals.filter((g) => g.saved < g.target);
-  const presetId =
-    defaultGoalId && active.some((g) => g.id === defaultGoalId) ? defaultGoalId : "";
+  const presetId = defaultGoalId && goals.some((g) => g.id === defaultGoalId) ? defaultGoalId : "";
 
   // Opening from a goal's own screen already answers "which quest?" — skip it.
   const [step, setStep] = useState(presetId ? 1 : 0);
@@ -364,7 +368,7 @@ export function StashSheet({
   const [amount, setAmount] = useState("");
   const [pickerOpen, setPickerOpen] = useState(false);
 
-  const chosen = active.find((g) => g.id === goalId);
+  const chosen = goals.find((g) => g.id === goalId);
 
   const value = Number(amount) || 0;
 

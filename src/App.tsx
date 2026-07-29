@@ -79,9 +79,11 @@ export default function App() {
     const goal = goals.find((g) => g.id === id);
     if (!goal) return;
 
-    const wasComplete = goal.saved >= goal.target;
-    const newSaved = Math.min(goal.target, goal.saved + amount);
-    const nowComplete = newSaved >= goal.target;
+    /* Not capped at the target. The full amount goes into the ledger either way,
+       so clamping `saved` made the two disagree the moment a goal finished —
+       the same drift the seed had. Progress already clamps its percentage at
+       100, so overshooting reads fine and the money is still counted. */
+    const newSaved = goal.saved + amount;
 
     // Recorded newest first so the streak grid and the breakdown both see it.
     // Money you add by hand is a top-up on whatever the cycle already puts in,
@@ -113,8 +115,6 @@ export default function App() {
       // let the bar animate a beat before the takeover
       setTimeout(() => setCelebration({ goalId: id, level: crossed, origin: "earned" }), 620);
     }
-    void nowComplete;
-    void wasComplete;
   }
 
   function nudge(name: string) {
