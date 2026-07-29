@@ -1,29 +1,32 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
-import { daysToGoal, type ContributionSource, type Goal } from "../data";
-import { categoryById } from "../lib/categories";
+import type { Goal } from "../data";
 import { inrPlain } from "../lib/format";
-import MaskIcon from "../components/MaskIcon";
-import { useCountUp } from "../lib/useCountUp";
-import ProgressRing from "../components/ProgressRing";
+import {
+  PACE_CARD,
+  PACE_LABEL,
+  milestones,
+  paceOf,
+  savedBreakdown,
+  streakLength,
+  streakMonths,
+  targetDateLabel,
+} from "../lib/pace";
+import MilestoneBadge from "../components/MilestoneBadge";
 import StatusBar from "../components/StatusBar";
-import SysIcon from "../components/SysIcon";
 
-const STASH_ICONS: Record<ContributionSource, { src: string; inset: string }> = {
-  skip: { src: "/icons/forward-circle.svg", inset: "9.38%" },
-  auto: { src: "/icons/calendar.svg", inset: "14.37% 10.55% 14.21% 10.94%" },
-  roundup: { src: "/icons/note.svg", inset: "19.45% 6.78%" },
-  boost: { src: "/icons/thunder.svg", inset: "12.5% 12.35% 12.35% 12.5%" },
-};
+/* ----------------------------------------------------------------------------
+ * Goal detail — Figma node 36:348 (unBox benchmarking).
+ *
+ * Reads state → journey → rhythm → source, top to bottom: where you are, the
+ * milestones between here and done, the months you kept it up, and how the money
+ * arrived. The per-transaction ledger is gone; the counts in the breakdown are
+ * the way into it.
+ * --------------------------------------------------------------------------*/
 
-function stashDate(daysAgo: number) {
-  if (daysAgo === 0) return "Today";
-  if (daysAgo === 1) return "Yesterday";
-  const d = new Date();
-  d.setDate(d.getDate() - daysAgo);
-  const month = d.toLocaleDateString("en-GB", { month: "long" });
-  return `${d.getDate()} ${month}, ${d.getFullYear()}`;
-}
+const MONO = "font-mono text-[14px] font-medium leading-[1.4]";
+const MUTED = "font-mono text-[12px] font-medium leading-[1.4] text-[#a3a3a3]";
+const H2 = "font-serif text-[20px] font-medium leading-[1.3]";
 
 export default function GoalDetails({
   goal,
@@ -40,15 +43,17 @@ export default function GoalDetails({
   onEdit: () => void;
   onDelete: () => void;
 }) {
-  const p = Math.min(1, goal.saved / goal.target);
-  const animatedSaved = useCountUp(goal.saved);
-  const daysLeft = daysToGoal(goal);
-  const remaining = Math.max(0, goal.target - goal.saved);
+  const pct = Math.min(100, Math.round((goal.saved / goal.target) * 100));
+  const pace = paceOf(goal);
+  const tone = PACE_CARD[pace];
+  const marks = milestones(goal);
+  const months = streakMonths(goal);
+  const streak = streakLength(goal);
+  const groups = savedBreakdown(goal);
 
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // dismiss the overflow menu on any outside tap
   useEffect(() => {
     if (!menuOpen) return;
     const onDown = (e: MouseEvent) => {
@@ -58,58 +63,63 @@ export default function GoalDetails({
     return () => document.removeEventListener("mousedown", onDown);
   }, [menuOpen]);
 
-  return (
-    <div className="relative h-full overflow-hidden bg-canvas">
-      <div className="phone-scroll safe-top h-full overflow-y-auto pb-36">
-        <StatusBar />
+  /* The rail runs green only as far as you've actually got. The design draws it
+     green through the locked node, which reads as "done" for a milestone you
+     haven't reached. */
+  const lastEarned = marks.reduce((acc, m, i) => (m.earned ? i : acc), -1);
+  const railPct = lastEarned < 0 ? 0 : (lastEarned / (marks.length - 1)) * 100;
 
-        <div className="flex flex-col items-center gap-6 px-4 pt-4">
+  return (
+    <div className="dot-paper relative h-full overflow-hidden text-black">
+      <div className="phone-scroll safe-top h-full overflow-y-auto pb-20">
+        <StatusBar theme="light" />
+
         {/* header */}
-        <div className="flex w-full items-center justify-between">
+        <div className="flex items-center justify-between px-5 py-3">
           <button
             onClick={onBack}
             aria-label="Back"
-            className="surface-card grid size-10 place-items-center rounded-full active:scale-95"
+            className="grid size-10 place-items-center rounded-full border border-[#ebebeb] bg-white active:scale-95"
+            style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.04))" }}
           >
-            <SysIcon src="/icons/chevron-left.svg" inset="21.88% 38.54% 21.88% 30.21%" box={20} />
+            <img src="/icons/lt-arrow-down.svg" alt="" className="size-5" />
           </button>
-          <span className="text-[18px] font-semibold leading-[1.3]">{goal.name}</span>
           <div ref={menuRef} className="relative">
             <button
               onClick={() => setMenuOpen((o) => !o)}
               aria-label="More options"
-              className="surface-card grid size-10 place-items-center rounded-full active:scale-95"
+              className="grid size-10 place-items-center rounded-full border border-[#ebebeb] bg-white active:scale-95"
+              style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.04))" }}
             >
-              <SysIcon src="/icons/three-dot.svg" inset="43.75% 18.75%" box={20} />
+              <img src="/icons/lt-more.svg" alt="" className="size-5" />
             </button>
             <AnimatePresence>
               {menuOpen && (
                 <motion.div
-                  className="surface-card absolute right-0 top-[46px] z-50 w-[168px] overflow-hidden rounded-[16px] p-1"
-                  initial={{ opacity: 0, scale: 0.94, y: -6 }}
+                  className="absolute right-0 top-[46px] z-50 w-[168px] overflow-hidden rounded-[4px] border border-[#e6e7e7] bg-white p-1"
+                  style={{ filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.08))" }}
+                  initial={{ opacity: 0, scale: 0.96, y: -6 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.94, y: -6 }}
-                  transition={{ type: "spring", stiffness: 340, damping: 26 }}
+                  exit={{ opacity: 0, scale: 0.96, y: -6 }}
+                  transition={{ duration: 0.18, ease: [0.23, 1, 0.32, 1] }}
                 >
                   <button
                     onClick={() => {
                       setMenuOpen(false);
                       onEdit();
                     }}
-                    className="flex w-full items-center gap-2.5 rounded-[12px] px-3 py-2.5 text-left text-[14px] font-medium text-ink active:bg-white/8"
+                    className={`${MONO} w-full rounded-[2px] px-3 py-2.5 text-left uppercase active:bg-[#f9f9fb]`}
                   >
-                    <SysIcon src="/icons/edit.svg" inset="17.35% 13.54% 17.71% 17.71%" box={20} />
-                    Edit quest
+                    Edit goal
                   </button>
                   <button
                     onClick={() => {
                       setMenuOpen(false);
                       onDelete();
                     }}
-                    className="flex w-full items-center gap-2.5 rounded-[12px] px-3 py-2.5 text-left text-[14px] font-medium text-[#ff5a5a] active:bg-white/8"
+                    className={`${MONO} w-full rounded-[2px] px-3 py-2.5 text-left uppercase text-[#f01600] active:bg-[#f9f9fb]`}
                   >
-                    <SysIcon src="/icons/bin-red.svg" inset="5.21% 13.54% 10.66% 13.54%" box={20} />
-                    Delete quest
+                    Delete goal
                   </button>
                 </motion.div>
               )}
@@ -117,151 +127,216 @@ export default function GoalDetails({
           </div>
         </div>
 
-        {/* ring, then everything below it — the old "₹x to go · target ₹y"
-            line is gone: the stat cards now carry both numbers */}
-        <div className="flex w-full flex-col items-center gap-8">
-        <ProgressRing value={p} size={184} stroke={14} from="#b8fe50" to="#b8fe50" track="#404040">
-          <span className="font-display text-[32px] font-semibold leading-[1.3] tracking-[2px] tnum">
-            {Math.round(p * 100)}%
-          </span>
-          <span className="text-[16px] font-medium text-ink-dim tnum">
-            ₹{inrPlain(animatedSaved)}
-          </span>
-        </ProgressRing>
-
-        <div className="flex w-full flex-col gap-6">
-        <div className="flex w-full flex-col gap-5">
-          {/* stat trio — icons are global, identical across every goal */}
-          <div className="flex items-start gap-3">
-            <Stat
-              icon={<SysIcon src="/icons/hourglass-half.svg" inset="11.47% 17.71%" />}
-              value={`₹${inrPlain(remaining)}`}
-              label="Still to go"
-            />
-            <Stat
-              icon={<SysIcon src="/icons/note-outline.svg" inset="19.45% 6.78%" />}
-              value={`₹${inrPlain(goal.target)}`}
-              label="Target"
-            />
-            <Stat
-              icon={
-                <SysIcon
-                  src="/icons/calendar-outline.svg"
-                  inset="13.54% 10.75% 15.04% 10.78%"
-                />
-              }
-              value={
-                daysLeft === Infinity ? "—" : `${daysLeft} ${daysLeft === 1 ? "day" : "days"}`
-              }
-              label="Time left"
-            />
-          </div>
-
-          {/* squad on this goal */}
-          {goal.squad.length > 0 && (
-            <div className="surface-card flex items-center justify-between rounded-[20px] p-4">
-              <div className="flex items-center gap-2">
-                <div className="flex">
-                  {goal.squad.map((src, i) => (
-                    <div
-                      key={i}
-                      className="-mr-4 size-8 overflow-hidden rounded-full bg-[#e1e4ea] last:mr-0"
-                    >
-                      <img src={src} alt="" className="size-full object-cover" />
-                    </div>
-                  ))}
+        <div className="flex flex-col items-center gap-10 px-5">
+          <div className="flex w-full flex-col items-center gap-8">
+            {/* hero */}
+            <div
+              className="relative flex w-full flex-col items-start gap-10 rounded-[4px] border border-[#dbdbdb] p-4"
+              style={{
+                backgroundImage: `linear-gradient(99deg, #ffffff 2.5%, ${tone.wash} 104%)`,
+              }}
+            >
+              <div className="flex w-full flex-col items-center gap-4">
+                <div className="flex w-full items-center justify-center gap-[15px]">
+                  <span className="h-0 flex-1 border-t border-dotted border-[#d8d8d8]" />
+                  <p className={MONO}>{goal.name}</p>
+                  <span className="h-0 flex-1 border-t border-dotted border-[#d8d8d8]" />
                 </div>
-                <div className="flex flex-col text-[14px]">
-                  {/* pluralise the noun only — "saving with you" then reads
-                      correctly for both 1 friend and many */}
-                  <p className="font-medium leading-[1.24] text-ink">
-                    {goal.squad.length === 1 ? "1 friend" : `${goal.squad.length} friends`}
+                <div className="flex flex-col items-center gap-2 whitespace-nowrap">
+                  <p className="font-serif text-[38px] font-semibold leading-[1.3] tnum">
+                    ₹{inrPlain(goal.saved)}
                   </p>
-                  <p className="leading-[1.4] text-ink-dim">saving with you</p>
+                  <p className={`${MONO} uppercase text-[#a3a3a3] tnum`}>
+                    of ₹{inrPlain(goal.target)}
+                  </p>
                 </div>
               </div>
+
+              <div className="relative flex w-full flex-col gap-3">
+                <div className="h-[6px] w-full bg-[#efefef]">
+                  <motion.div
+                    className="h-full"
+                    style={{ background: `linear-gradient(to right, ${tone.from}, ${tone.to})` }}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${pct}%` }}
+                    transition={{ duration: 0.7, ease: [0.23, 1, 0.32, 1] }}
+                  />
+                </div>
+                <div className={`${MONO} flex w-full items-start justify-between`}>
+                  <p className="uppercase" style={{ color: tone.text }}>
+                    {PACE_LABEL[pace]}
+                  </p>
+                  <p className="tnum">{targetDateLabel(goal)}</p>
+                </div>
+
+                {/* callout rides the fill's end, clamped so it can't hang off
+                    either edge of the card */}
+                <motion.div
+                  className="pointer-events-none absolute bottom-[40px] flex flex-col items-center"
+                  style={{ width: 48 }}
+                  initial={{ left: 0 }}
+                  animate={{ left: `calc(${Math.min(92, Math.max(0, pct - 7))}%)` }}
+                  transition={{ duration: 0.7, ease: [0.23, 1, 0.32, 1] }}
+                >
+                  <span
+                    className="w-12 rounded-[3px] bg-white py-1 text-center font-mono text-[12px] font-medium uppercase leading-[1.4] text-black"
+                    style={{
+                      filter:
+                        "drop-shadow(0 2px 0 rgba(0,0,0,0.25)) drop-shadow(0 1px 2px rgba(0,0,0,0.12))",
+                    }}
+                  >
+                    {pct}%
+                  </span>
+                  <img
+                    src="/icons/chart-caret.svg"
+                    alt=""
+                    className="h-[6px] w-[14px] rotate-180"
+                  />
+                </motion.div>
+              </div>
+            </div>
+
+            {/* actions */}
+            <div className="flex w-full items-center gap-3">
               <button
                 onClick={onNudgeSquad}
-                className="flex h-9 w-[94px] items-center justify-center rounded-full border border-white/20 backdrop-blur-[12px] text-[14px] font-semibold text-lime active:scale-95"
+                className="flex h-10 flex-1 items-center justify-center gap-2 rounded-[2px] border border-[#c7c8c8] bg-white px-5 active:scale-[0.99]"
+                style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.06))" }}
               >
-                Nudge 👋
+                <img src="/icons/lt-add.svg" alt="" className="size-[18px]" />
+                <span className={`${MONO} uppercase`}>
+                  {goal.squad.length > 0 ? "Nudge friends" : "Add friends"}
+                </span>
+              </button>
+              <button
+                onClick={onStashMoney}
+                className="flex h-10 flex-1 items-center justify-center gap-2 rounded-[2px] border border-[#8f8f8f] bg-black px-5 active:scale-[0.99]"
+                style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.06))" }}
+              >
+                <img src="/icons/lt-moneys.svg" alt="" className="size-[18px] -scale-x-100" />
+                <span className={`${MONO} uppercase text-white`}>Add money</span>
               </button>
             </div>
-          )}
-        </div>
+          </div>
 
-        {/* contribution history — the "how much are you saving" ledger */}
-        <div className="flex w-full flex-col gap-3">
-          <h2 className="text-[18px] font-medium leading-[1.4]">Recent stashes</h2>
-          <div className="flex flex-col gap-4">
-            {goal.contributions.length === 0 && (
-              <div className="flex flex-col items-center gap-1 px-4 py-6 text-center">
-                <p className="text-[14px] font-medium text-ink">No stashes yet</p>
-                <p className="text-[14px] leading-[1.4] text-ink-dim">
-                  Add your first bit of money and watch this quest come alive.
+          {/* milestones */}
+          <div className="flex w-full flex-col items-start gap-6">
+            <h2 className={H2}>Milestones</h2>
+            <div className="relative flex w-full items-start gap-8 pb-2.5 pt-3">
+              <div className="absolute left-1/2 top-[24px] h-1 w-[275px] -translate-x-1/2 overflow-hidden rounded-full bg-[#ececec]">
+                <motion.div
+                  className="h-full rounded-full"
+                  style={{ background: "linear-gradient(to right, #5ee7b7, #00c86a)" }}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${railPct}%` }}
+                  transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
+                />
+              </div>
+              {marks.map((m) => (
+                <div key={m.level} className="relative flex flex-1 flex-col items-center gap-3">
+                  <MilestoneBadge level={m.level} earned={m.earned} />
+                  <p
+                    className={`${MONO} uppercase tnum ${m.earned ? "" : "text-[#bdbdbd]"}`}
+                  >
+                    ₹{inrPlain(m.amount)}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* streak */}
+          <div className="flex w-full flex-col items-start gap-6">
+            <h2 className={H2}>Streak</h2>
+            <div className="flex w-full flex-col items-start gap-6">
+              <div
+                className="flex items-center justify-center gap-1.5 rounded-[50px] border border-[#ebebeb] bg-white px-3 py-1.5"
+                style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.04))" }}
+              >
+                <img src="/icons/lt-flash.svg" alt="" className="size-4" />
+                <p className="font-mono text-[12px] font-medium uppercase leading-[1.4]">
+                  {streak} month streak
                 </p>
               </div>
-            )}
-            {goal.contributions.map((c) => (
-              <div key={c.id} className="surface-card flex items-center justify-between rounded-[20px] p-4">
-                <div className="flex items-center gap-3">
-                  {/* a stash added in-app shows its category's icon; the
-                      seeded ones fall back to the icon for their source */}
-                  <div className="grid size-9 place-items-center rounded-lg border border-elev text-lime">
-                    {(() => {
-                      const cat = categoryById(c.categoryId);
-                      return cat ? (
-                        <MaskIcon src={cat.icon} inset={cat.inset} />
-                      ) : (
-                        <SysIcon
-                          src={STASH_ICONS[c.source].src}
-                          inset={STASH_ICONS[c.source].inset}
+              <div className="flex w-full flex-col items-start gap-5">
+                {[months.slice(0, 6), months.slice(6)].map((row, r) => (
+                  <div key={r} className="flex w-full flex-col items-start gap-4">
+                    <div className="flex w-full items-start justify-between px-1 font-mono text-[12px] font-medium uppercase leading-[1.4] text-[#b6b6b6]">
+                      {row.map((m, i) => (
+                        <p key={i}>{m.label}</p>
+                      ))}
+                    </div>
+                    <div className="relative flex w-full items-center justify-between">
+                      {/* the tint runs only as far as the months that landed */}
+                      <span
+                        className="absolute left-0.5 top-0.5 h-5 rounded-[22px] bg-[#ecf1fd]"
+                        style={{
+                          width: `calc(${(row.filter((m) => m.hit).length / row.length) * 100}% - 4px)`,
+                        }}
+                      />
+                      {row.map((m, i) => (
+                        <img
+                          key={i}
+                          src={m.hit ? "/icons/lt-check-filled.svg" : "/icons/lt-check.svg"}
+                          alt=""
+                          className="relative size-6"
                         />
-                      );
-                    })()}
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex flex-col text-[14px]">
-                    <p className="font-medium leading-[1.24] text-ink">{c.label}</p>
-                    <p className="leading-[1.4] text-ink-dim">{stashDate(c.daysAgo)}</p>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* how the money arrived */}
+          <div className="flex w-full flex-col items-start gap-6">
+            <h2 className={H2}>How you have saved it</h2>
+            <div className="flex w-full flex-col items-start gap-4">
+              {groups.map((g, i) => (
+                <div key={g.label} className="flex w-full flex-col gap-4">
+                  {i > 0 && (
+                    <span className="h-0 w-full border-t border-dotted border-[#d8d8d8]" />
+                  )}
+                  <div className="flex w-full items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="grid size-6 place-items-center rounded-full border border-[#ebebeb] bg-white">
+                        <span
+                          className="flex rounded-full p-[2px]"
+                          style={{ background: g.halo }}
+                        >
+                          <span
+                            className="size-2 rounded-full"
+                            style={{
+                              background: g.colour,
+                              boxShadow: "inset 0 2.578px 0 0 rgba(255,255,255,0.35)",
+                            }}
+                          />
+                        </span>
+                      </span>
+                      <div className="flex flex-col gap-1.5 whitespace-nowrap">
+                        <p className={MONO}>{g.label}</p>
+                        <p className={MUTED}>
+                          {g.count} transaction{g.count === 1 ? "" : "s"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-1.5 whitespace-nowrap">
+                      <p className="font-serif text-[16px] font-semibold leading-[1.3] tnum">
+                        ₹{inrPlain(g.amount)}
+                      </p>
+                      <p className={`${MUTED} tnum`}>{g.share.toFixed(1)}%</p>
+                    </div>
                   </div>
                 </div>
-                <span className="text-[16px] font-medium text-lime tnum">
-                  ₹{inrPlain(c.amount)}
-                </span>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
-        </div>
-        </div>
-        </div>
       </div>
 
-      {/* sticky footer — single primary CTA over a bottom fade */}
-      {/* phone has no faux home bar, so the CTA sits 16px off the edge there */}
-      <div className="safe-bottom pointer-events-none absolute inset-x-0 bottom-0 z-40 bg-gradient-to-b from-transparent to-black to-60% px-4 pb-4 pt-3 sm:pb-8">
-        <button
-          onClick={onStashMoney}
-          className="pointer-events-auto flex h-12 w-full items-center justify-center gap-2 rounded-full bg-lime text-[16px] font-semibold text-black active:scale-[0.98]"
-        >
-          <SysIcon src="/icons/note-round-black.svg" inset="19.45% 6.78%" box={20} />
-          Add money
-        </button>
-        <div className="faux-home-bar absolute inset-x-0 bottom-0 flex justify-center pb-2 pt-3">
-          <div className="h-[5px] w-[124px] rounded-lg bg-white" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Stat({ icon, value, label }: { icon: React.ReactNode; value: string; label: string }) {
-  return (
-    <div className="surface-card flex flex-1 flex-col items-center gap-1.5 rounded-[20px] p-2">
-      <div className="grid size-8 place-items-center rounded-lg p-1">{icon}</div>
-      <div className="flex w-full flex-col gap-1 text-center text-[14px]">
-        <p className="font-medium leading-[1.24] text-ink tnum">{value}</p>
-        <p className="leading-[1.4] text-ink-dim">{label}</p>
+      <div className="faux-home-bar pointer-events-none absolute inset-x-0 bottom-0 flex justify-center pb-2 pt-3">
+        <div className="h-[5px] w-[124px] rounded-lg bg-black" />
       </div>
     </div>
   );

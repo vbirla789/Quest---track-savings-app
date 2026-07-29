@@ -63,6 +63,23 @@ function inDays(days: number) {
   return toLocalISO(d);
 }
 
+/**
+ * The recurring autopay, one row per month.
+ *
+ * `weeklyAutoSave` existed on the model but never appeared in the ledger, so the
+ * "Weekly cycle" group read as empty and the streak grid had holes in months the
+ * user was demonstrably saving. One row a month keeps the list short.
+ */
+function autoSaves(prefix: string, monthly: number, months: number): Contribution[] {
+  return Array.from({ length: months }, (_, i) => ({
+    id: `${prefix}-auto-${i}`,
+    source: "auto" as const,
+    label: "Weekly cycle",
+    amount: monthly,
+    daysAgo: daysAgoIn(i + 1, 2),
+  }));
+}
+
 const monthYear = (iso: string) =>
   parseLocalDate(iso).toLocaleDateString("en-GB", { month: "short", year: "numeric" });
 
@@ -111,6 +128,7 @@ export const GOALS: Goal[] = [
       { id: "l10", categoryId: "roundup", source: "roundup", label: "Round-ups", amount: 520, daysAgo: daysAgoIn(6, 17) },
       { id: "l11", categoryId: "cooked", source: "skip", label: "Cooked in", amount: 780, daysAgo: daysAgoIn(7, 8) },
       { id: "l12", categoryId: "cashback", source: "boost", label: "Cashback", amount: 430, daysAgo: daysAgoIn(9, 23) },
+      ...autoSaves("l", 2400, 11),
     ],
   },
   {
@@ -137,6 +155,7 @@ export const GOALS: Goal[] = [
       { id: "i11", categoryId: "roundup", source: "roundup", label: "Round-ups", amount: 610, daysAgo: daysAgoIn(6, 5) },
       { id: "i12", categoryId: "bonus", source: "boost", label: "Bonus", amount: 1900, daysAgo: daysAgoIn(8, 14) },
       { id: "i13", categoryId: "cab", source: "skip", label: "Skipped cab", amount: 540, daysAgo: daysAgoIn(10, 2) },
+      ...autoSaves("i", 2000, 11),
     ],
   },
   {
@@ -164,6 +183,7 @@ export const GOALS: Goal[] = [
       { id: "g12", categoryId: "cooked", source: "skip", label: "Cooked in", amount: 900, daysAgo: daysAgoIn(7, 19) },
       { id: "g13", categoryId: "roundup", source: "roundup", label: "Round-ups", amount: 340, daysAgo: daysAgoIn(9, 6) },
       { id: "g14", categoryId: "cashback", source: "boost", label: "Cashback", amount: 1100, daysAgo: daysAgoIn(11, 12) },
+      ...autoSaves("g", 1500, 11),
     ],
   },
 ];

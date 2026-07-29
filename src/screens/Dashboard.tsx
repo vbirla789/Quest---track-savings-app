@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Goal } from "../data";
 import { inrPlain } from "../lib/format";
 import {
+  PACE_CARD,
   PACE_LABEL,
   PACE_PILL,
   monthlyTotals,
@@ -23,13 +24,6 @@ import StatusBar from "../components/StatusBar";
  * 2–4px instead of the dark screens' 20–24px. Kept self-contained so the dark
  * screens are untouched.
  * --------------------------------------------------------------------------*/
-
-/** Strong stop, bar start, and card wash for each pace state. */
-const PACE_STYLE: Record<Pace, { text: string; from: string; to: string; wash: string }> = {
-  ahead: { text: "#00c86a", from: "#5ee7b7", to: "#00c86a", wash: "#edfcf7" },
-  on: { text: "#0a59ff", from: "#b8cbf4", to: "#0a59ff", wash: "#edf2fd" },
-  behind: { text: "#f9ca4d", from: "#f7eaca", to: "#f9ca4d", wash: "#fdf9ef" },
-};
 
 const LABEL = "font-mono text-[14px] font-medium leading-[1.4]";
 const MUTED = "font-mono text-[12px] font-medium leading-[1.4] text-[#a3a3a3]";
@@ -366,7 +360,7 @@ function GoalCard({
   onNudge: () => void;
 }) {
   const pace = paceOf(goal);
-  const style = PACE_STYLE[pace];
+  const style = PACE_CARD[pace];
   const pct = Math.min(100, Math.round((goal.saved / goal.target) * 100));
 
   return (
