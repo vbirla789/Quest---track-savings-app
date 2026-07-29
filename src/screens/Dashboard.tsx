@@ -164,31 +164,39 @@ export default function Dashboard({
                   </p>
                   {hidden ? (
                     /* ₹ stays, the digits become dots — the currency still reads
-                       as money without publishing the amount */
-                    <div className="flex h-[52px] w-full items-center justify-between">
-                      <span className="font-serif text-[40px] font-semibold leading-[1.3]">₹</span>
-                      <div className="flex h-[52px] items-center justify-center gap-3">
+                       as money without publishing the amount. 49.4 is 38 x 1.3,
+                       the visible amount's own box, kept in step so toggling the
+                       eye can't nudge the layout. */
+                    <div className="flex h-[49.4px] w-full items-center justify-between">
+                      <span className="font-serif text-[38px] font-semibold leading-[1.3]">₹</span>
+                      <div className="flex h-[49.4px] items-center justify-center gap-3">
                         {Array.from({ length: 6 }, (_, i) => (
                           <span key={i} className="size-4 rounded-full bg-[#212121]" />
                         ))}
                       </div>
                     </div>
                   ) : (
-                    <p className="font-serif text-[40px] font-semibold leading-[1.3] tnum">
+                    <p className="font-serif text-[38px] font-semibold leading-[1.3] tnum">
                       ₹{inrPlain(tab === "total" ? animatedTotal : picked.amount)}
                     </p>
                   )}
                 </div>
                 {/* Status line is on the savings tab only — the Progress frame
-                    drops it, the chart is making the same point there. */}
-                {tab === "total" && (
-                  <div className="flex items-center gap-1.5">
-                    <PaceDot pace={health} />
-                    <p className={LABEL} style={{ color: PACE_PILL[health].text }}>
-                      {PACE_LABEL[health]}
-                    </p>
-                  </div>
-                )}
+                    drops it, the chart is making the same point there. But the
+                    row is always here: leaving it out entirely took 27px with it
+                    (19px line + the parent's 8px gap) and slid the hero, the
+                    CTAs and the goals up on every tab switch. The hero boxes
+                    were already the same 236 — this was the whole shift. */}
+                <div className="flex h-[19px] items-center gap-1.5">
+                  {tab === "total" && (
+                    <>
+                      <PaceDot pace={health} />
+                      <p className={LABEL} style={{ color: PACE_PILL[health].text }}>
+                        {PACE_LABEL[health]}
+                      </p>
+                    </>
+                  )}
+                </div>
               </div>
 
               {/* Both tabs' visuals live in one fixed-height box so switching
