@@ -59,6 +59,26 @@ export default function GoalDetails({
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
+  /* The callout has to stay inside the card, which means clamping it in pixels —
+     a percentage left can't know how wide 48px of tooltip is. Measured on mount
+     and on resize; the bar's width only changes with the viewport. */
+  const barRef = useRef<HTMLDivElement>(null);
+  const [barW, setBarW] = useState(0);
+
+  useEffect(() => {
+    const measure = () => setBarW(barRef.current?.offsetWidth ?? 0);
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
+
+  const CALLOUT_W = 48;
+  const EDGE = 4;
+  const calloutLeft = Math.min(
+    Math.max(EDGE, (pct / 100) * barW - CALLOUT_W / 2),
+    Math.max(EDGE, barW - CALLOUT_W - EDGE),
+  );
+
   useEffect(() => {
     if (!menuOpen) return;
     const onDown = (e: MouseEvent) => {
@@ -134,7 +154,9 @@ export default function GoalDetails({
           </div>
         </div>
 
-        <div className="flex flex-col items-center gap-10 px-5">
+        {/* pt-4 on top of the header's own 12px bottom padding = the 28px the
+            design puts between the header and the card. */}
+        <div className="flex flex-col items-center gap-10 px-5 pt-4">
           <div className="flex w-full flex-col items-center gap-8">
             {/* hero */}
             <div
@@ -162,7 +184,7 @@ export default function GoalDetails({
                 </div>
               </div>
 
-              <div className="relative flex w-full flex-col gap-3">
+              <div ref={barRef} className="relative flex w-full flex-col gap-3">
                 <div className="h-[6px] w-full bg-[#efefef]">
                   <motion.div
                     className="h-full"
@@ -190,9 +212,9 @@ export default function GoalDetails({
                     design specifies between tooltip and bar */}
                 <motion.div
                   className="pointer-events-none absolute bottom-[46px] flex flex-col items-center"
-                  style={{ width: 48 }}
-                  initial={{ left: 0 }}
-                  animate={{ left: `calc(${Math.min(92, Math.max(0, pct - 7))}%)` }}
+                  style={{ width: CALLOUT_W }}
+                  initial={{ left: EDGE }}
+                  animate={{ left: calloutLeft }}
                   transition={{ duration: 0.7, ease: [0.23, 1, 0.32, 1] }}
                 >
                   {/* -3px so the pill sits over the caret: drawn flush they
@@ -387,7 +409,7 @@ export default function GoalDetails({
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-1.5 whitespace-nowrap">
-                      <p className="font-serif text-[16px] font-semibold leading-[1.3] tnum">
+                      <p className="font-serif text-[14px] font-semibold leading-[1.3] tnum">
                         ₹{inrPlain(g.amount)}
                       </p>
                       <p className={`${MUTED} tnum`}>{g.share.toFixed(1)}%</p>

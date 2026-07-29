@@ -35,16 +35,19 @@ export default function Success({
 
   return (
     <motion.div
-      className="absolute inset-0 z-[60] overflow-hidden bg-[#feffff] text-black"
+      className="dot-paper absolute inset-0 z-[60] overflow-hidden text-black"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.28, ease: EASE_OUT }}
     >
+      {/* Centred rather than top-aligned: the design leaves comparable space
+          above and below the block. min-h-full keeps it centred while short and
+          lets it scroll if the copy ever grows. */}
       <div className="phone-scroll safe-top h-full overflow-y-auto">
         <StatusBar theme="light" />
 
-        <div className="flex flex-col items-center px-5 py-10">
+        <div className="flex min-h-[calc(100%-47px)] flex-col items-center justify-center px-5 py-10">
           <div className="flex w-full flex-col items-center gap-14">
             <div className="flex w-full flex-col items-center gap-8">
               <motion.div
@@ -66,11 +69,10 @@ export default function Success({
                   {/* Sparkle rules flank the headline and take the leftover width,
                       so they grow and shrink with whatever it says. */}
                   <div className="flex w-full items-center justify-center gap-2">
-                    <img
-                      src="/icons/lt-sparkle.svg"
-                      alt=""
-                      className="h-[15px] min-w-0 flex-1 rotate-180"
-                    />
+                    {/* The asset carries its star at the right-hand end, so the
+                        left rule sits as drawn and the right one mirrors — both
+                        stars then point in at the headline. */}
+                    <img src="/icons/lt-sparkle.svg" alt="" className="h-[15px] min-w-0 flex-1" />
                     {isGoalComplete ? (
                       <p className="w-[224px] shrink-0 text-center font-serif text-[35px] font-semibold leading-[1.3]">
                         {goal.name} unlocked
@@ -80,7 +82,11 @@ export default function Success({
                         ₹{inrPlain(goal.saved)}
                       </p>
                     )}
-                    <img src="/icons/lt-sparkle.svg" alt="" className="h-[15px] min-w-0 flex-1" />
+                    <img
+                      src="/icons/lt-sparkle.svg"
+                      alt=""
+                      className="h-[15px] min-w-0 flex-1 -scale-x-100"
+                    />
                   </div>
                 </div>
 
