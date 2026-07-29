@@ -34,6 +34,7 @@ export default function GoalDetails({
   onStashMoney,
   onNudgeSquad,
   onAddFriends,
+  onCelebrate,
   onEdit,
   onDelete,
 }: {
@@ -42,6 +43,7 @@ export default function GoalDetails({
   onStashMoney: () => void;
   onNudgeSquad: () => void;
   onAddFriends: () => void;
+  onCelebrate: (level: number) => void;
   onEdit: () => void;
   onDelete: () => void;
 }) {
@@ -184,8 +186,10 @@ export default function GoalDetails({
 
                 {/* callout rides the fill's end, clamped so it can't hang off
                     either edge of the card */}
+                {/* bar top (32px up from the row's bottom) + the 8px gap the
+                    design specifies between tooltip and bar */}
                 <motion.div
-                  className="pointer-events-none absolute bottom-[40px] flex flex-col items-center"
+                  className="pointer-events-none absolute bottom-[46px] flex flex-col items-center"
                   style={{ width: 48 }}
                   initial={{ left: 0 }}
                   animate={{ left: `calc(${Math.min(92, Math.max(0, pct - 7))}%)` }}
@@ -279,16 +283,29 @@ export default function GoalDetails({
                   transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
                 />
               </div>
-              {marks.map((m) => (
-                <div key={m.level} className="relative flex flex-1 flex-col items-center gap-3">
-                  <MilestoneBadge level={m.level} earned={m.earned} />
-                  <p
-                    className={`${MONO} uppercase tnum ${m.earned ? "" : "text-[#bdbdbd]"}`}
+              {/* Earned milestones replay their completion screen; locked ones
+                  aren't buttons at all, so there's nothing to press and nothing
+                  to explain. */}
+              {marks.map((m) =>
+                m.earned ? (
+                  <button
+                    key={m.level}
+                    onClick={() => onCelebrate(m.level)}
+                    aria-label={`Level ${m.level} reached — ₹${inrPlain(m.amount)}`}
+                    className="relative flex flex-1 flex-col items-center gap-3 active:scale-95"
                   >
-                    ₹{inrPlain(m.amount)}
-                  </p>
-                </div>
-              ))}
+                    <MilestoneBadge level={m.level} earned />
+                    <p className={`${MONO} uppercase tnum`}>₹{inrPlain(m.amount)}</p>
+                  </button>
+                ) : (
+                  <div key={m.level} className="relative flex flex-1 flex-col items-center gap-3">
+                    <MilestoneBadge level={m.level} earned={false} />
+                    <p className={`${MONO} uppercase tnum text-[#bdbdbd]`}>
+                      ₹{inrPlain(m.amount)}
+                    </p>
+                  </div>
+                ),
+              )}
             </div>
             </div>
           </div>

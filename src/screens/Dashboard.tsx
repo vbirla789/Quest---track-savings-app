@@ -442,8 +442,11 @@ function GoalCard({
                 e.stopPropagation();
                 onNudge();
               }}
-              className="h-[29px] w-[74px] rounded-[2px] border border-[#8f8f8f] bg-black font-mono text-[12px] font-medium uppercase leading-[1.4] text-white active:scale-95"
-              style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.06))" }}
+              /* Secondary: nudging is a side errand next to adding money, and a
+                 filled button on every shared card competed with the row's real
+                 primary. Same treatment as the detail hero's nudge. */
+              className="h-[29px] w-[74px] rounded-[2px] border border-[#c7c8c8] bg-white font-mono text-[12px] font-medium uppercase leading-[1.4] text-black active:scale-95"
+              style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.08))" }}
             >
               Nudge
             </button>

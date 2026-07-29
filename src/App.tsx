@@ -2,7 +2,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import {
   GOALS,
-  levelFromXp,
   type Contribution,
   type ContributionSource,
   type Goal,
@@ -11,10 +10,11 @@ import {
 import PhoneFrame from "./components/PhoneFrame";
 import ContactPicker from "./components/ContactPicker";
 import { NewQuestSheet, StashSheet } from "./components/Sheets";
+import { milestones } from "./lib/pace";
 import Dashboard from "./screens/Dashboard";
 import EditQuest from "./screens/EditQuest";
 import GoalDetails from "./screens/GoalDetails";
-import LevelUp from "./screens/LevelUp";
+import Success from "./screens/Success";
 
 type View = "dashboard" | "details" | "edit";
 
@@ -54,11 +54,14 @@ export default function App() {
   const [goals, setGoals] = useState<Goal[]>(GOALS);
   const [view, setView] = useState<View>("dashboard");
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [celebration, setCelebration] = useState<{ goal: Goal; level: number } | null>(null);
+  /* Which milestone we're celebrating, if any. Held by goal id + level rather
+     than a snapshot of the goal, so the screen keeps reading live figures. */
+  const [celebration, setCelebration] = useState<{ goalId: string; level: number } | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [sheet, setSheet] = useState<SheetKind>(null);
 
   const selected = goals.find((g) => g.id === selectedId) ?? null;
+  const celebrated = celebration ? (goals.find((g) => g.id === celebration.goalId) ?? null) : null;
 
   function openGoal(id: string) {
     setSelectedId(id);
@@ -97,13 +100,20 @@ export default function App() {
     );
     setGoals(updated);
 
-    if (nowComplete && !wasComplete) {
-      const newTotal = updated.reduce((s, g) => s + g.saved, 0);
-      const crossedLevel = levelFromXp(newTotal).level;
-      const goalForCard = updated.find((g) => g.id === id)!;
-      // let the ring/bar animate a beat before the takeover
-      setTimeout(() => setCelebration({ goal: goalForCard, level: crossedLevel }), 550);
+    /* Any milestone crossed by this stash earns the screen, not only the last
+       one — and if a single deposit clears two, the higher one is the story. */
+    const before = milestones(goal);
+    const after = milestones({ ...goal, saved: newSaved });
+    const crossed = after.reduce(
+      (acc, m, i) => (m.earned && !before[i].earned ? m.level : acc),
+      0,
+    );
+    if (crossed > 0) {
+      // let the bar animate a beat before the takeover
+      setTimeout(() => setCelebration({ goalId: id, level: crossed }), 620);
     }
+    void nowComplete;
+    void wasComplete;
   }
 
   function nudge(name: string) {
@@ -217,10 +227,12 @@ export default function App() {
     setTimeout(() => setToast(null), 2200);
   }
 
-  function closeCelebration() {
+  function closeCelebration(toDashboard: boolean) {
     setCelebration(null);
-    setView("dashboard");
-    setSelectedId(null);
+    if (toDashboard) {
+      setView("dashboard");
+      setSelectedId(null);
+    }
   }
 
   const scale = usePhoneScale();
@@ -264,6 +276,7 @@ export default function App() {
                 onStashMoney={() => setSheet("stash")}
                 onNudgeSquad={() => nudge("your squad")}
                 onAddFriends={() => setSheet("contacts")}
+                onCelebrate={(level) => setCelebration({ goalId: selected.id, level })}
                 onEdit={() => setView("edit")}
                 onDelete={deleteQuest}
               />
@@ -332,18 +345,19 @@ export default function App() {
           )}
         </AnimatePresence>
 
-        {/* level-up takeover */}
+        {/* completion takeover */}
         <AnimatePresence>
-          {celebration && (
-            <LevelUp
-              goal={celebration.goal}
-              newLevel={celebration.level}
-              onClose={closeCelebration}
-              onStartNewQuest={() => {
-                // the CTA promises a new quest, so actually open the sheet
-                closeCelebration();
-                setSheet("quest");
+          {celebrated && (
+            <Success
+              goal={celebrated}
+              level={celebration!.level}
+              isGoalComplete={celebration!.level === milestones(celebrated).length}
+              onShare={() => {
+                closeCelebration(false);
+                setToast("Shared");
+                setTimeout(() => setToast(null), 2200);
               }}
+              onDashboard={() => closeCelebration(true)}
             />
           )}
         </AnimatePresence>
