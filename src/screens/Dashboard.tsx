@@ -194,7 +194,7 @@ export default function Dashboard({
               {/* Both tabs' visuals live in one fixed-height box so switching
                   can't shift the CTAs and goals below. The chart needs the full
                   column width, the coin is 173px wide and centred. */}
-              <div className="relative h-[224px] w-full">
+              <div className="relative h-[236px] w-full">
                 {/* No `mode="wait"` — both branches are absolutely positioned in
                     this box, so they cross-fade in place. Serialising them
                     doubled the switch latency and, if you tapped the segments
@@ -202,25 +202,45 @@ export default function Dashboard({
                 <AnimatePresence initial={false}>
                   {tab === "total" ? (
                     <motion.div
-                      key="coin"
-                      /* Fixed 173x184 and centred, not stretched to the box: the
-                         box is sized for the taller chart, and filling it
-                         distorted the coin's aspect ratio. */
-                      className="absolute left-1/2 top-1/2 h-[184px] w-[173px] -translate-x-1/2 -translate-y-1/2 overflow-hidden"
+                      key="piggy"
+                      /* 273x236 frame from node 50:11525, centred. The piggy is
+                         220x220 at (27, 8) with its own crop, and the ground
+                         shadow is a separate 128x19 ellipse — keeping them apart
+                         means the shadow stays put while the piggy animates. */
+                      className="absolute left-1/2 top-1/2 h-[236px] w-[273px] -translate-x-1/2 -translate-y-1/2"
                       initial={{ opacity: 0, scale: 0.94 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.94 }}
                       transition={{ duration: 0.24, ease: [0.23, 1, 0.32, 1] }}
                     >
-                      {/* The coin is a screenshot on an opaque white ground, so
-                          on the dot paper it punched out a white rectangle.
-                          Multiply drops the white to nothing and leaves the
-                          coin's own colours alone. */}
-                      <img
-                        src="/coin.png"
-                        alt=""
-                        className="absolute left-[-8.84%] top-[-3.12%] h-[99.05%] w-[113.92%] max-w-none mix-blend-multiply"
-                      />
+                      <div
+                        className="absolute h-[19px] w-[128px] -translate-x-1/2"
+                        style={{ left: "calc(50% + 6.5px)", top: 196 }}
+                      >
+                        <div className="absolute" style={{ inset: "-105.26% -15.63%" }}>
+                          <img
+                            src="/piggy-shadow.svg"
+                            alt=""
+                            className="block size-full max-w-none"
+                          />
+                        </div>
+                      </div>
+                      <div
+                        className="absolute overflow-hidden"
+                        style={{ left: 27, top: 8, width: 220, height: 220 }}
+                      >
+                        <img
+                          src="/piggy.png"
+                          alt=""
+                          className="absolute max-w-none"
+                          style={{
+                            left: "-14.48%",
+                            top: "-13.48%",
+                            width: "128.96%",
+                            height: "123.91%",
+                          }}
+                        />
+                      </div>
                     </motion.div>
                   ) : (
                     <motion.div
