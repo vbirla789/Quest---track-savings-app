@@ -218,6 +218,13 @@ export const CYCLE_NOUN: Record<Cycle, string> = {
   monthly: "month",
 };
 
+/** "Daily" / "Weekly" / "Monthly", to name the cycle row in the breakdown. */
+const CYCLE_ADJECTIVE: Record<Cycle, string> = {
+  daily: "Daily",
+  weekly: "Weekly",
+  monthly: "Monthly",
+};
+
 const DAY_LABELS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
 /**
@@ -289,16 +296,32 @@ export type SavedGroup = {
 };
 
 /**
- * "Savings breakdown" — three groups by how the money arrived.
+ * "Savings breakdown" — two groups by how the money arrived.
  *
- * Shares are computed from the amounts so the column adds to 100%, and the
- * groups are sorted largest first.
+ * The cycle row is named after the goal's own cycle, so a daily saver reads
+ * "Daily cycle" rather than being told it was weekly.
+ *
+ * Everything that isn't the cycle counts as a bonus add on, including round-ups
+ * and skipped spends. They used to have an "Others" row of their own; folding
+ * them in rather than dropping them keeps the two shares adding to 100% and the
+ * amounts summing to what the goal actually holds.
+ *
+ * Shares are computed from the amounts, and the groups are sorted largest first.
  */
 export function savedBreakdown(goal: Goal): SavedGroup[] {
   const defs = [
-    { label: "Weekly cycle", sources: ["auto"], colour: "#9459ee", halo: "rgba(100,23,217,0.3)" },
-    { label: "Bonus Add on", sources: ["boost"], colour: "#3b82f6", halo: "rgba(59,130,246,0.3)" },
-    { label: "Others", sources: ["skip", "roundup"], colour: "#f9ca51", halo: "rgba(249,202,81,0.3)" },
+    {
+      label: `${CYCLE_ADJECTIVE[goal.cycle]} cycle`,
+      sources: ["auto"],
+      colour: "#9459ee",
+      halo: "rgba(100,23,217,0.3)",
+    },
+    {
+      label: "Bonus add on",
+      sources: ["boost", "skip", "roundup"],
+      colour: "#3b82f6",
+      halo: "rgba(59,130,246,0.3)",
+    },
   ] as const;
 
   const total = goal.contributions.reduce((s, c) => s + c.amount, 0) || 1;

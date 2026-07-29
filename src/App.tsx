@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import {
   GOALS,
   type Contribution,
-  type ContributionSource,
   type Cycle,
   type Goal,
   type SquadMember,
@@ -75,11 +74,7 @@ export default function App() {
     setView("details");
   }
 
-  function addToGoal(
-    id: string,
-    amount: number,
-    category?: { label: string; source: ContributionSource; categoryId: string },
-  ) {
+  function addToGoal(id: string, amount: number) {
     if (amount <= 0) return;
     const goal = goals.find((g) => g.id === id);
     if (!goal) return;
@@ -88,15 +83,14 @@ export default function App() {
     const newSaved = Math.min(goal.target, goal.saved + amount);
     const nowComplete = newSaved >= goal.target;
 
-    // Record the stash in the ledger, newest first, so it lands at the top of
-    // "Recent stashes" rather than being invisible.
+    // Recorded newest first so the streak grid and the breakdown both see it.
+    // Money you add by hand is a top-up on whatever the cycle already puts in,
+    // which is exactly what the breakdown's "Bonus add on" counts — so there is
+    // nothing left for the stash flow to ask about.
     const entry: Contribution = {
       id: `${id}-${Date.now()}`,
-      // the category decides both the row label and its icon — fall back only
-      // if a stash somehow arrives untagged
-      source: category?.source ?? "boost",
-      label: category?.label || "Manual boost",
-      categoryId: category?.categoryId,
+      source: "boost",
+      label: "Bonus add on",
       amount,
       daysAgo: 0,
     };
@@ -203,13 +197,9 @@ export default function App() {
     setTimeout(() => setToast(null), 2200);
   }
 
-  function stashCash(
-    goalId: string,
-    amount: number,
-    category: { label: string; source: ContributionSource; categoryId: string },
-  ) {
+  function stashCash(goalId: string, amount: number) {
     setSheet(null);
-    addToGoal(goalId, amount, category);
+    addToGoal(goalId, amount);
     const g = goals.find((x) => x.id === goalId);
     const completes = g && g.saved + amount >= g.target;
     if (!completes) {

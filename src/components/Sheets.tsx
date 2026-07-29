@@ -1,7 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import type { ContributionSource, Cycle, Goal } from "../data";
-import { CATEGORIES } from "../lib/categories";
+import type { Cycle, Goal } from "../data";
 import { inrPlain } from "../lib/format";
 import { DateWheel, Keyboard } from "./Keyboard";
 import MaskIcon from "./MaskIcon";
@@ -10,8 +9,8 @@ import MaskIcon from "./MaskIcon";
  * Bottom sheets for the dashboard's two primary actions.
  *
  * Both ask ONE question per step so the user never faces a wall of fields:
- *   New quest → quest name → target amount → target date
- *   Add money → which quest → how much → category
+ *   New quest → quest name → target amount → target date → cycle
+ *   Add money → which quest → how much
  * The shell (scrim, grabber, panel, single CTA) is shared; only the question
  * block swaps, sliding sideways as you advance. No supporting copy under the
  * question — the label and the field carry it.
@@ -353,11 +352,7 @@ export function StashSheet({
   goals: Goal[];
   defaultGoalId?: string;
   onClose: () => void;
-  onStash: (
-    goalId: string,
-    amount: number,
-    category: { label: string; source: ContributionSource; categoryId: string },
-  ) => void;
+  onStash: (goalId: string, amount: number) => void;
 }) {
   const active = goals.filter((g) => g.saved < g.target);
   const presetId =
@@ -367,16 +362,11 @@ export function StashSheet({
   const [step, setStep] = useState(presetId ? 1 : 0);
   const [goalId, setGoalId] = useState(presetId || active[0]?.id || "");
   const [amount, setAmount] = useState("");
-  const [category, setCategory] = useState("");
-  const [customCategory, setCustomCategory] = useState("");
   const [pickerOpen, setPickerOpen] = useState(false);
 
   const chosen = active.find((g) => g.id === goalId);
 
   const value = Number(amount) || 0;
-  const isOther = category === "others";
-  const picked = CATEGORIES.find((c) => c.id === category);
-  const categoryLabel = isOther ? customCategory.trim() : (picked?.label ?? "");
 
   const steps = [
     {
@@ -454,7 +444,8 @@ export function StashSheet({
     },
     {
       label: "How much?",
-      cta: "Continue",
+      /* Last step now, so it commits rather than continuing. */
+      cta: value > 0 ? `Add ₹${inrPlain(value)}` : "Add money",
       valid: value > 0,
       accessory: (
         <Keyboard
@@ -489,59 +480,6 @@ export function StashSheet({
         </div>
       ),
     },
-    {
-      label: "Category",
-      cta: value > 0 ? `Add ₹${inrPlain(value)}` : "Add money",
-      valid: categoryLabel !== "",
-      // only the free-text "Others" name needs a keyboard
-      accessory: isOther ? (
-        <Keyboard
-          variant="qwerty"
-          onKey={(ch) => setCustomCategory((n) => n + ch)}
-          onBackspace={() => setCustomCategory((n) => n.slice(0, -1))}
-          doneLabel="done"
-          onDone={() => undefined}
-        />
-      ) : undefined,
-      /* No fixed cap on the field: the panel sizes itself to its content now, so
-         a hard max-height here only clipped the "Name this category" field that
-         appears under Others. The list is a fixed six, so the content is
-         bounded — min-h-0 keeps it able to shrink and scroll on a short
-         viewport. */
-      field: (
-        <div className="phone-scroll flex min-h-0 flex-col gap-3 overflow-y-auto">
-          <div className="grid grid-cols-2 gap-2">
-            {CATEGORIES.map((c) => {
-              const selected = category === c.id;
-              return (
-                <button
-                  key={c.id}
-                  onClick={() => setCategory(c.id)}
-                  className={`flex h-10 items-center justify-center gap-2 rounded-[2px] border font-mono text-[13px] font-medium transition-colors ${
-                    selected
-                      ? "border-[#0a59ff] bg-[#edf2fd] text-[#0a59ff]"
-                      : "border-[#e6e7e7] bg-white text-black"
-                  }`}
-                >
-                  <MaskIcon src={c.icon} inset={c.inset} box={20} />
-                  {c.label}
-                </button>
-              );
-            })}
-          </div>
-          {isOther && (
-            <div className="flex flex-col gap-2">
-              <p className="font-mono text-[12px] text-[#a3a3a3]">Name this category</p>
-              <Field
-                value={customCategory}
-                onChange={setCustomCategory}
-                placeholder="e.g. Doctor, Gift…"
-              />
-            </div>
-          )}
-        </div>
-      ),
-    },
   ];
 
   const current = steps[step];
@@ -553,11 +491,7 @@ export function StashSheet({
       setStep(step + 1);
       return;
     }
-    onStash(goalId, value, {
-      label: categoryLabel,
-      source: picked?.source ?? "boost",
-      categoryId: category,
-    });
+    onStash(goalId, value);
   }
 
   return (
