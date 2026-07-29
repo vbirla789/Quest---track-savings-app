@@ -289,7 +289,7 @@ export type SavedGroup = {
 };
 
 /**
- * "How you have saved it" — three groups by how the money arrived.
+ * "Savings breakdown" — three groups by how the money arrived.
  *
  * Shares are computed from the amounts so the column adds to 100%, and the
  * groups are sorted largest first.

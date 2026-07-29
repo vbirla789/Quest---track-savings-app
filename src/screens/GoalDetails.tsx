@@ -420,9 +420,12 @@ export default function GoalDetails({
             </div>
           </div>
 
-          {/* how the money arrived */}
+          {/* How the money arrived. Hidden outright until some has: the section
+              is nothing but a breakdown of contributions, so on a goal with none
+              it was a heading over empty space. */}
+          {groups.length > 0 && (
           <div className="flex w-full flex-col items-start gap-6">
-            <h2 className={H2}>How you have saved it</h2>
+            <h2 className={H2}>Savings breakdown</h2>
             <div className="flex w-full flex-col items-start gap-4">
               {groups.map((g, i) => (
                 <div key={g.label} className="flex w-full flex-col gap-4">
@@ -463,6 +466,7 @@ export default function GoalDetails({
               ))}
             </div>
           </div>
+          )}
         </div>
       </div>
 
