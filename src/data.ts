@@ -105,7 +105,10 @@ function daysAgoIn(monthsBack: number, day: number) {
 }
 
 const LADAKH_DUE = inDays(9);
-const IPHONE_DUE = inDays(24);
+/* 154 days, not 24. A 1.35L goal due in three weeks with a quarter saved isn't
+   behind pace, it's impossible — and that one nonsense premise dragged the whole
+   portfolio headline red. It still reads behind, just recoverably so. */
+const IPHONE_DUE = inDays(154);
 const GOA_DUE = inDays(139);
 
 /* Copy and figures match Figma node 12045:71457. streakWeeks is also what the
@@ -117,7 +120,7 @@ export const GOALS: Goal[] = [
     cycle: "monthly",
     name: "Ladakh ride",
     target: 50000,
-    saved: 43500,
+    saved: 49000,
     weeklyAutoSave: 2500,
     streakWeeks: 5,
     targetDate: LADAKH_DUE,
@@ -170,7 +173,7 @@ export const GOALS: Goal[] = [
     cycle: "monthly",
     name: "Goa trip",
     target: 50000,
-    saved: 25000,
+    saved: 26300,
     weeklyAutoSave: 2500,
     streakWeeks: 20,
     targetDate: GOA_DUE,

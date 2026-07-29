@@ -73,13 +73,33 @@ export function targetDateLabel(goal: Goal): string {
   });
 }
 
-/** One bad goal drags the headline down; every goal ahead lifts it. */
+/**
+ * The headline reads the portfolio, not the worst goal.
+ *
+ * Worst-case was too blunt for a summary: one lagging goal out of three turned
+ * the whole picture red, which is a harsher story than the money tells. Totalling
+ * saved against total expected weights each goal by its size, so a small goal
+ * slipping doesn't overrule two larger ones running ahead — and the goal cards
+ * still each show their own state, which is where you go to find the laggard.
+ */
 export function overallPace(goals: Goal[]): Pace {
   const active = goals.filter((g) => g.saved < g.target);
   if (active.length === 0) return "ahead";
-  const paces = active.map(paceOf);
-  if (paces.includes("behind")) return "behind";
-  return paces.every((p) => p === "ahead") ? "ahead" : "on";
+
+  let saved = 0;
+  let expected = 0;
+  for (const g of active) {
+    const e = expectedByNow(g);
+    if (e === null) continue;
+    saved += g.saved;
+    expected += e;
+  }
+  if (expected <= 0) return "on";
+
+  const ratio = saved / expected;
+  if (ratio >= 1.05) return "ahead";
+  if (ratio >= 0.95) return "on";
+  return "behind";
 }
 
 /* Copy and palette from the Financial health component (node 12047:82461).

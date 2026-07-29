@@ -19,6 +19,8 @@ const PLOT_H = 167;
 const BAR_W = 24;
 /** Six columns fill the 335px column, so the rest is reachable by scrolling. */
 const COL_W = 56;
+/** Gutter for the y-axis labels, outside the scrolling strip. */
+const AXIS_W = 34;
 
 /** Compact form for the chart labels — ₹17k rather than ₹17,000. */
 function short(amount: number) {
@@ -93,9 +95,49 @@ export default function MonthlyChart({
 
   const stripW = buckets.length * COL_W;
 
+  /* Three ticks — top, middle, baseline. More would compete with the bars, and
+     the point is only to give the heights a scale to be read against. */
+  const ticks = [max, max / 2, 0];
+
   return (
     <div className="flex w-full flex-col items-center gap-6">
-      <div ref={scrollRef} className="phone-scroll w-full overflow-x-auto">
+      <div className="flex w-full items-stretch">
+        {/* Outside the scroller on purpose: an axis that scrolled away with the
+            bars would stop being an axis. */}
+        <div
+          className="relative shrink-0 pr-1.5"
+          style={{ width: AXIS_W, height: PLOT_H + 25 }}
+          aria-hidden="true"
+        >
+          {ticks.map((t, i) => (
+            <span
+              key={i}
+              className="absolute right-1.5 -translate-y-1/2 font-mono text-[10px] font-medium leading-none text-[#c4c4c4]"
+              style={{ top: (i / (ticks.length - 1)) * PLOT_H }}
+            >
+              {hidden ? "•••" : short(t)}
+            </span>
+          ))}
+          <span
+            className="absolute right-0 top-0 border-r border-dotted border-[#e0e0e0]"
+            style={{ height: PLOT_H }}
+          />
+        </div>
+      {/* Fade the left edge once scrolled: a half-clipped column otherwise leaves
+          a stray letter under the axis that reads as a rendering bug rather than
+          "there is more this way". Only when there is something to the left. */}
+      <div
+        ref={scrollRef}
+        className="phone-scroll min-w-0 flex-1 overflow-x-auto"
+        style={
+          progress > 0.02
+            ? {
+                maskImage: "linear-gradient(to right, transparent 0, black 20px)",
+                WebkitMaskImage: "linear-gradient(to right, transparent 0, black 20px)",
+              }
+            : undefined
+        }
+      >
         <div className="relative" style={{ width: stripW }}>
           <div className="relative" style={{ height: PLOT_H }}>
             {/* Dotted gridlines on every column boundary, overshooting the plot. */}
@@ -194,6 +236,7 @@ export default function MonthlyChart({
             </div>
           </div>
         </div>
+      </div>
       </div>
 
       {/* Scroll indicator — draggable, and its thumb reports real position. */}
