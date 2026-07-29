@@ -92,7 +92,6 @@ export default function MonthlyChart({
   };
 
   const stripW = buckets.length * COL_W;
-  const recentIdx = buckets.length - 1;
 
   return (
     <div className="flex w-full flex-col items-center gap-6">
@@ -132,21 +131,22 @@ export default function MonthlyChart({
               </button>
             ))}
 
-            {/* Average across the completed months. Stops before the recent
-                column — a window still filling hasn't earned a comparison. */}
+            {/* Average across the completed months, drawn the full width of the
+                strip as the design has it — a reference line you read against
+                every column, including the one still filling. */}
             {avg > 0 && (
               <div
                 className="absolute z-20 flex items-center"
-                style={{ left: 0, width: recentIdx * COL_W, bottom: height(avg) }}
+                style={{ left: 0, width: stripW, bottom: height(avg) }}
               >
-                <span className="h-0 flex-1 border-t border-dashed border-[#02c96c]" />
+                <span className="h-0 flex-1 border-t border-dotted border-[#02c96c]" />
                 {/* Sticky: centred across twelve months the pill spends most of
                     its life off screen, so it pins to the viewport edge instead
                     of scrolling away from the line it labels. */}
                 <span className="sticky left-3 right-3 shrink-0 rounded-[23px] border border-[#02c96c] bg-white px-2 py-0.5 font-mono text-[11px] font-medium uppercase leading-[1.4] text-[#02c96c]">
                   Avg {label(avg)}
                 </span>
-                <span className="h-0 flex-1 border-t border-dashed border-[#02c96c]" />
+                <span className="h-0 flex-1 border-t border-dotted border-[#02c96c]" />
               </div>
             )}
 

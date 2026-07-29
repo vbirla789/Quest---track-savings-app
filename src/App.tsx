@@ -17,6 +17,10 @@ import GoalDetails from "./screens/GoalDetails";
 import LevelUp from "./screens/LevelUp";
 
 type View = "dashboard" | "details" | "edit";
+
+/* iOS drawer curve — the same one the bottom sheets ride, so a screen presenting
+   itself and a sheet presenting itself feel like one gesture vocabulary. */
+const SHEET_EASE = [0.32, 0.72, 0, 1] as [number, number, number, number];
 type SheetKind = "quest" | "stash" | "contacts" | null;
 
 /* Shrink the phone to fit small desktop windows while keeping it 1:1 on a
@@ -224,34 +228,31 @@ export default function App() {
 
   const screens = (
     <>
-        <AnimatePresence mode="wait">
-          {view === "dashboard" && (
-            <motion.div
-              key="dashboard"
-              className="h-full"
-              initial={{ opacity: 0, x: -24 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -24 }}
-              transition={{ type: "spring", stiffness: 260, damping: 26 }}
-            >
-              <Dashboard
-                goals={goals}
-                onOpenGoal={openGoal}
-                onNudge={nudge}
-                onNewQuest={() => setSheet("quest")}
-                onStashCash={() => setSheet("stash")}
-              />
-            </motion.div>
-          )}
+        {/* A card stack, not a swap. The dashboard is the root and stays mounted;
+            detail rises over it and edit rises over detail, each dismissed by the
+            chevron-down in its own header. That's what the down-chevron promises,
+            and it's why these can't share an AnimatePresence with mode="wait" —
+            that would unmount the layer underneath and there'd be nothing to
+            slide over. */}
+        <div className="h-full">
+          <Dashboard
+            goals={goals}
+            onOpenGoal={openGoal}
+            onNudge={nudge}
+            onNewQuest={() => setSheet("quest")}
+            onStashCash={() => setSheet("stash")}
+          />
+        </div>
 
-          {view === "details" && selected && (
+        <AnimatePresence>
+          {(view === "details" || view === "edit") && selected && (
             <motion.div
               key="details"
-              className="h-full"
-              initial={{ opacity: 0, x: 24 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 24 }}
-              transition={{ type: "spring", stiffness: 260, damping: 26 }}
+              className="absolute inset-0 z-20"
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ duration: 0.42, ease: SHEET_EASE }}
             >
               <GoalDetails
                 goal={selected}
@@ -268,11 +269,11 @@ export default function App() {
           {view === "edit" && selected && (
             <motion.div
               key="edit"
-              className="h-full"
-              initial={{ opacity: 0, x: 24 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 24 }}
-              transition={{ type: "spring", stiffness: 260, damping: 26 }}
+              className="absolute inset-0 z-30"
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ duration: 0.42, ease: SHEET_EASE }}
             >
               <EditQuest
                 goal={selected}

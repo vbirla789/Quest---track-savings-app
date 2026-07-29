@@ -4,7 +4,6 @@ import type { Goal } from "../data";
 import { inrPlain } from "../lib/format";
 import {
   PACE_CARD,
-  PACE_LABEL,
   milestones,
   paceOf,
   savedBreakdown,
@@ -12,6 +11,7 @@ import {
   streakMonths,
   targetDateLabel,
 } from "../lib/pace";
+import Avatar from "../components/Avatar";
 import MilestoneBadge from "../components/MilestoneBadge";
 import StatusBar from "../components/StatusBar";
 
@@ -134,11 +134,14 @@ export default function GoalDetails({
           <div className="flex w-full flex-col items-center gap-8">
             {/* hero */}
             <div
-              className="relative flex w-full flex-col items-start gap-10 rounded-[4px] border border-[#dbdbdb] p-4"
+              className="relative flex w-full flex-col items-start gap-6 rounded-[4px] border border-[#dbdbdb] p-4"
               style={{
                 backgroundImage: `linear-gradient(99deg, #ffffff 2.5%, ${tone.wash} 104%)`,
               }}
             >
+              {/* Title + bar keep their own 40px rhythm; the squad block below
+                  sits 24px off it, per node 39:47617. */}
+              <div className="flex w-full flex-col items-start gap-10">
               <div className="flex w-full flex-col items-center gap-4">
                 <div className="flex w-full items-center justify-center gap-[15px]">
                   <span className="h-0 flex-1 border-t border-dotted border-[#d8d8d8]" />
@@ -166,8 +169,13 @@ export default function GoalDetails({
                   />
                 </div>
                 <div className={`${MONO} flex w-full items-start justify-between`}>
+                  {/* Binary wording, as the design frames it — the graded
+                      three-state copy stays on Overview where the status
+                      component defines it. Colour follows the bar rather than the
+                      wording, so an on-pace goal isn't green text over a blue
+                      bar. */}
                   <p className="uppercase" style={{ color: tone.text }}>
-                    {PACE_LABEL[pace]}
+                    {pace === "behind" ? "Off track" : "On track"}
                   </p>
                   <p className="tnum">{targetDateLabel(goal)}</p>
                 </div>
@@ -197,22 +205,48 @@ export default function GoalDetails({
                   />
                 </motion.div>
               </div>
+              </div>
+
+              {/* Squad lives inside the hero on a shared goal, with its own
+                  nudge — so the action bar below can stay "add friends". */}
+              {shared && (
+                <div className="flex w-full flex-col items-start gap-4">
+                  <span className="h-0 w-full border-t border-dotted border-[#d8d8d8]" />
+                  <div className="flex w-full items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-start">
+                        {goal.squad.map((m) => (
+                          <Avatar key={m.name} member={m} size={32} className="-mr-3 last:mr-0" />
+                        ))}
+                      </div>
+                      <div className="flex flex-col whitespace-nowrap">
+                        <p className={MONO}>
+                          {goal.squad.length} {goal.squad.length === 1 ? "friend" : "friends"}
+                        </p>
+                        <p className={MUTED}>saving with you</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={onNudgeSquad}
+                      className="w-[74px] shrink-0 rounded-[2px] border border-[#c7c8c8] bg-white py-1.5 font-mono text-[12px] font-medium uppercase leading-[1.4] text-black active:scale-95"
+                      style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.08))" }}
+                    >
+                      Nudge
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* actions */}
             <div className="flex w-full items-center gap-3">
-              {/* Shared goals nudge, solo goals invite. "Nudge friends" wrapped
-                  to two lines and broke the row's height, and a plus icon reads
-                  as "add" — wrong verb once the squad exists. */}
               <button
-                onClick={shared ? onNudgeSquad : onAddFriends}
-                className="flex h-10 flex-1 items-center justify-center gap-2 overflow-hidden rounded-[2px] border border-[#c7c8c8] bg-white px-5 active:scale-[0.99]"
+                onClick={onAddFriends}
+                className="flex h-10 flex-1 items-center justify-center gap-2 rounded-[2px] border border-[#c7c8c8] bg-white px-5 active:scale-[0.99]"
                 style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.06))" }}
               >
-                {!shared && <img src="/icons/lt-add.svg" alt="" className="size-[18px]" />}
-                <span className={`${MONO} whitespace-nowrap uppercase`}>
-                  {shared ? "Nudge" : "Add friends"}
-                </span>
+                <img src="/icons/lt-add.svg" alt="" className="size-[18px]" />
+                <span className={`${MONO} whitespace-nowrap uppercase`}>Add friends</span>
               </button>
               <button
                 onClick={onStashMoney}
