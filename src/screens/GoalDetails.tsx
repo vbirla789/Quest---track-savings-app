@@ -31,6 +31,39 @@ const MONO = "font-mono text-[14px] font-medium leading-[1.4]";
 const MUTED = "font-mono text-[12px] font-medium leading-[1.4] text-[#a3a3a3]";
 const H2 = "font-serif text-[20px] font-medium leading-[1.3]";
 
+/** The streak check, and so the width of one cell in the grid. */
+const CHECK = 24;
+
+/**
+ * The streak tint: a band from the first check that landed in the row to the
+ * last, sitting 2px inside each of them.
+ *
+ * It needs a left offset, not just a width. Anchoring it at the row's left edge
+ * works for the design's own rows, which both start on a hit — but a goal whose
+ * only contribution is today would have painted the band across four days that
+ * never landed to reach the one that did.
+ *
+ * Kept as a calc rather than a percentage because the cells are a fixed 24px
+ * with the leftover distributed between them, so no percentage of the row lands
+ * on a check's edge. On the design's 319px row this gives a 73.75px pitch and a
+ * full row of 315, both exactly node 51:45448.
+ */
+function railStyle(row: { hit: boolean }[]): { left: number | string; width: number | string } {
+  const first = row.findIndex((m) => m.hit);
+  if (first < 0) return { left: 0, width: 0 };
+  let last = first;
+  row.forEach((m, i) => {
+    if (m.hit) last = i;
+  });
+  const span = CHECK - 4;
+  if (row.length < 2) return { left: 2, width: span };
+  const pitch = `((100% - ${CHECK * row.length}px) / ${row.length - 1} + ${CHECK}px)`;
+  return {
+    left: `calc(${first} * ${pitch} + 2px)`,
+    width: `calc(${last - first} * ${pitch} + ${span}px)`,
+  };
+}
+
 export default function GoalDetails({
   goal,
   onBack,
@@ -354,28 +387,34 @@ export default function GoalDetails({
                   {streak} {CYCLE_NOUN[goal.cycle]} streak
                 </p>
               </div>
-              <div className="flex w-full flex-col items-start gap-5">
+              {/* px-2 insets the grid 8px each side of the section, which is
+                  what sets the pitch: five 24px cells across the remaining
+                  width. Rows are 20px apart, label to checks is 12. */}
+              <div className="flex w-full flex-col items-start gap-5 px-2">
                 {[periods.slice(0, perRow), periods.slice(perRow)].map((row, r) => (
-                  <div key={r} className="flex w-full flex-col items-start gap-4">
+                  <div key={r} className="flex w-full flex-col items-start gap-3">
                     <div className="flex w-full items-start justify-between px-1 font-mono text-[12px] font-medium uppercase leading-[1.4] text-[#b6b6b6]">
                       {row.map((m, i) => (
                         <p key={i}>{m.label}</p>
                       ))}
                     </div>
                     <div className="relative flex w-full items-center justify-between">
-                      {/* the tint runs only as far as the months that landed */}
+                      {/* The tint spans the checks that landed, 2px inside each
+                          end — exactly the 315 of 319 the design has on a full
+                          row. */}
                       <span
-                        className="absolute left-0.5 top-0.5 h-5 rounded-[22px] bg-[#ecf1fd]"
-                        style={{
-                          width: `calc(${(row.filter((m) => m.hit).length / row.length) * 100}% - 4px)`,
-                        }}
+                        className="absolute top-0.5 h-5 rounded-[22px] bg-[#ecf1fd]"
+                        style={railStyle(row)}
                       />
                       {row.map((m, i) => (
-                        <img
+                        /* The check exports as a bare 19.5px glyph, so it needs
+                           the 24px box and the design's 9.38% inset — a plain
+                           24px img would scale the circle up to fill it. */
+                        <SysIcon
                           key={i}
                           src={m.hit ? "/icons/lt-check-filled.svg" : "/icons/lt-check.svg"}
-                          alt=""
-                          className="relative size-5"
+                          inset="9.38%"
+                          box={24}
                         />
                       ))}
                     </div>

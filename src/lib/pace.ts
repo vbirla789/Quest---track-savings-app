@@ -195,11 +195,18 @@ export function milestones(goal: Goal): Milestone[] {
 
 export type StreakPeriod = { label: string; hit: boolean; current: boolean };
 
-/** Cells per grid, and how many go in each of the two rows. */
+/**
+ * Cells per grid, and how many go in each of the two rows.
+ *
+ * Five per row across all three cycles — node 51:45440 sets the layout, and the
+ * grid is one component, so a daily goal shouldn't get a different pitch from a
+ * monthly one. Ten cells is a rolling window in every case, not a calendar week,
+ * so nothing about "5" breaks the day labels.
+ */
 const CYCLE_GRID: Record<Cycle, { count: number; perRow: number }> = {
-  daily: { count: 14, perRow: 7 },
-  weekly: { count: 12, perRow: 6 },
-  monthly: { count: 12, perRow: 6 },
+  daily: { count: 10, perRow: 5 },
+  weekly: { count: 10, perRow: 5 },
+  monthly: { count: 10, perRow: 5 },
 };
 
 export const cycleGrid = (cycle: Cycle) => CYCLE_GRID[cycle];
