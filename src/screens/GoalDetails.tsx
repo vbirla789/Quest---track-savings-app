@@ -14,6 +14,7 @@ import {
 import Avatar from "../components/Avatar";
 import MilestoneBadge from "../components/MilestoneBadge";
 import StatusBar from "../components/StatusBar";
+import SysIcon from "../components/SysIcon";
 
 /* ----------------------------------------------------------------------------
  * Goal detail — Figma node 36:348 (unBox benchmarking).
@@ -118,7 +119,10 @@ export default function GoalDetails({
               className="grid size-10 place-items-center rounded-full border border-[#ebebeb] bg-white active:scale-95"
               style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.04))" }}
             >
-              <img src="/icons/lt-more.svg" alt="" className="size-5" />
+              {/* 24px box with the glyph at the design's inset, not a 20px img:
+                  the export is the bare 15x3 dots, so scaling the whole file to
+                  20px squashed them into a tight cluster. */}
+              <SysIcon src="/icons/lt-more.svg" inset="43.75% 18.75%" box={24} />
             </button>
             <AnimatePresence>
               {menuOpen && (
@@ -340,7 +344,9 @@ export default function GoalDetails({
                 className="flex items-center justify-center gap-1.5 rounded-[50px] border border-[#ebebeb] bg-white px-3 py-1.5"
                 style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.04))" }}
               >
-                <img src="/icons/lt-flash.svg" alt="" className="size-4" />
+                {/* The bolt exports as a bare 9x14 glyph, so a 16px square img
+                    stretched it wide. Boxed at the design's inset instead. */}
+                <SysIcon src="/icons/lt-flash.svg" inset="5.21% 21.87%" box={16} />
                 <p className="font-mono text-[12px] font-medium uppercase leading-[1.4]">
                   {streak} month streak
                 </p>
