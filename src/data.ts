@@ -79,14 +79,18 @@ function inDays(days: number) {
  * `weeklyAutoSave` existed on the model but never appeared in the ledger, so the
  * "Weekly cycle" group read as empty and the streak grid had holes in months the
  * user was demonstrably saving. One row a month keeps the list short.
+ *
+ * `from` is how many months back the run starts, so a goal can have stopped
+ * paying in a while ago — which is what gives Ladakh the seven-of-ten streak the
+ * design shows rather than a full grid.
  */
-function autoSaves(prefix: string, monthly: number, months: number): Contribution[] {
+function autoSaves(prefix: string, monthly: number, months: number, from = 1): Contribution[] {
   return Array.from({ length: months }, (_, i) => ({
     id: `${prefix}-auto-${i}`,
     source: "auto" as const,
     label: "Weekly cycle",
     amount: monthly,
-    daysAgo: daysAgoIn(i + 1, 2),
+    daysAgo: daysAgoIn(i + from, 2),
   }));
 }
 
@@ -129,20 +133,19 @@ const SEED: Omit<Goal, "saved">[] = [
     streakWeeks: 5,
     targetDate: LADAKH_DUE,
     squad: [],
+    /* Nothing in the last three months, on purpose: this is the goal the design
+       screenshots, and its grid shows seven filled cells then three empty. The
+       story holds — it is 98% funded with nine days to run, so it front-loaded
+       and has been coasting since. Amounts are tuned so the ledger still totals
+       ₹49,000 and the card still reads 98%. */
     contributions: [
-      { id: "l1", categoryId: "cashback", source: "boost", label: "Cashback", amount: 1500, daysAgo: 1 },
-      { id: "l2", categoryId: "roundup", source: "roundup", label: "Round-ups", amount: 270, daysAgo: 3 },
-      { id: "l3", categoryId: "cooked", source: "skip", label: "Cooked in", amount: 410, daysAgo: 5 },
-      { id: "l4", categoryId: "bonus", source: "boost", label: "Bonus", amount: 4200, daysAgo: daysAgoIn(1, 18) },
-      { id: "l5", categoryId: "cooked", source: "skip", label: "Cooked in", amount: 1840, daysAgo: daysAgoIn(1, 6) },
-      { id: "l6", categoryId: "cab", source: "skip", label: "Skipped cab", amount: 960, daysAgo: daysAgoIn(2, 21) },
       { id: "l7", categoryId: "roundup", source: "roundup", label: "Round-ups", amount: 640, daysAgo: daysAgoIn(3, 12) },
       { id: "l8", categoryId: "cashback", source: "boost", label: "Cashback", amount: 2100, daysAgo: daysAgoIn(4, 9) },
       { id: "l9", categoryId: "cooked", source: "skip", label: "Cooked in", amount: 1250, daysAgo: daysAgoIn(5, 15) },
-      { id: "l10", categoryId: "roundup", source: "roundup", label: "Round-ups", amount: 520, daysAgo: daysAgoIn(6, 17) },
+      { id: "l10", categoryId: "roundup", source: "roundup", label: "Round-ups", amount: 400, daysAgo: daysAgoIn(6, 17) },
       { id: "l11", categoryId: "cooked", source: "skip", label: "Cooked in", amount: 780, daysAgo: daysAgoIn(7, 8) },
       { id: "l12", categoryId: "cashback", source: "boost", label: "Cashback", amount: 430, daysAgo: daysAgoIn(9, 23) },
-      ...autoSaves("l", 3100, 11),
+      ...autoSaves("l", 6200, 7, 3),
     ],
   },
   {
