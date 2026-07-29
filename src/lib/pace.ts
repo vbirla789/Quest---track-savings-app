@@ -72,24 +72,61 @@ export function overallPace(goals: Goal[]): Pace {
   return paces.every((p) => p === "ahead") ? "ahead" : "on";
 }
 
+/* Copy and palette from the Financial health component (node 12047:82461).
+   Deliberately not the card palette — the cards read green/amber/blue for
+   progress, this reads purple/blue/red for status, and the design keeps them
+   separate. */
 export const PACE_LABEL: Record<Pace, string> = {
-  ahead: "Running early",
+  ahead: "Well ahead",
   on: "Right on pace",
-  behind: "Falling behind",
+  behind: "Slipping back",
 };
 
+export const PACE_PILL: Record<Pace, { text: string; dot: string; halo: string }> = {
+  ahead: { text: "#6417d9", dot: "#9459ee", halo: "rgba(100,23,217,0.3)" },
+  on: { text: "#0a59ff", dot: "#3b82f6", halo: "rgba(59,130,246,0.3)" },
+  behind: { text: "#f01600", dot: "#ff5847", halo: "rgba(240,22,0,0.3)" },
+};
+
+/** Total stashed in the last `days` days, across every goal. */
+export function recentTotal(goals: Goal[], days = 14): number {
+  let sum = 0;
+  for (const goal of goals) {
+    for (const c of goal.contributions) if (c.daysAgo < days) sum += c.amount;
+  }
+  return sum;
+}
+
+export type MonthBucket = { label: string; amount: number; recent: boolean };
+
 /**
- * Contributions bucketed by day, oldest first.
+ * Calendar months, oldest first, with the current month last and labelled
+ * RECENT — the shape the Progress chart draws.
  *
- * Daily rather than weekly on purpose: the seeded ledger spans about a week, so
- * weekly buckets collapse into a single spike with nine empty columns beside it.
- * A day-level window is the largest one this data can actually fill.
+ * Bucketed on the real calendar rather than fixed 30-day windows, so a bar
+ * labelled MAR contains exactly what March contains.
  */
-export function dailyTotals(goals: Goal[], days = 14): number[] {
-  const buckets = new Array(days).fill(0);
+export function monthlyTotals(goals: Goal[], months = 6): MonthBucket[] {
+  const now = new Date();
+  const slots = new Map<string, number>();
+  const buckets: MonthBucket[] = [];
+
+  for (let back = months - 1; back >= 0; back--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - back, 1);
+    slots.set(`${d.getFullYear()}-${d.getMonth()}`, buckets.length);
+    buckets.push({
+      label: back === 0 ? "RECENT" : d.toLocaleDateString("en-GB", { month: "short" }).toUpperCase(),
+      amount: 0,
+      recent: back === 0,
+    });
+  }
+
   for (const goal of goals) {
     for (const c of goal.contributions) {
-      if (c.daysAgo < days) buckets[days - 1 - c.daysAgo] += c.amount;
+      const d = new Date();
+      d.setDate(d.getDate() - c.daysAgo);
+      const slot = slots.get(`${d.getFullYear()}-${d.getMonth()}`);
+      if (slot !== undefined) buckets[slot].amount += c.amount;
     }
   }
   return buckets;

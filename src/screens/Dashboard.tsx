@@ -2,8 +2,18 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import type { Goal } from "../data";
 import { inrPlain } from "../lib/format";
-import { PACE_LABEL, dailyTotals, overallPace, paceOf, timeLabel, type Pace } from "../lib/pace";
+import {
+  PACE_LABEL,
+  PACE_PILL,
+  monthlyTotals,
+  overallPace,
+  paceOf,
+  recentTotal,
+  timeLabel,
+  type Pace,
+} from "../lib/pace";
 import { useCountUp } from "../lib/useCountUp";
+import MonthlyChart from "../components/MonthlyChart";
 import StatusBar from "../components/StatusBar";
 
 /* ----------------------------------------------------------------------------
@@ -85,17 +95,19 @@ export default function Dashboard({
   const animatedTotal = useCountUp(totalSaved);
   const health = overallPace(goals);
 
-  const days = dailyTotals(goals);
-  const windowTotal = days.reduce((s, d) => s + d, 0);
-  const dayAvg = windowTotal / Math.max(1, days.length);
+  /* One masking rule across the screen: rupee figures go, shapes and percentages
+     stay. Hiding a balance is about not publishing absolute amounts — blanking
+     the bars as well would leave nothing to look at. */
+  const windowTotal = recentTotal(goals, 14);
+  const months = monthlyTotals(goals);
 
   return (
-    <div className="relative h-full overflow-hidden bg-white text-black">
+    <div className="dot-paper relative h-full overflow-hidden text-black">
       {/* pb clears the home indicator, which floats over this scroller */}
       <div className="phone-scroll safe-top h-full overflow-y-auto pb-20">
         {/* Header sticks with the status bar, not on its own: on desktop the
             faux status bar would otherwise slide out from under it. */}
-        <div ref={headerRef} className="sticky top-0 z-30 bg-white">
+        <div ref={headerRef} className="dot-paper sticky top-0 z-30">
           <StatusBar theme="light" />
           <div className="flex items-center justify-between px-5 py-3">
             <IconButton src="/icons/lt-profile.svg" label="Profile" />
@@ -146,7 +158,7 @@ export default function Dashboard({
               <div ref={readoutRef} className="flex flex-col items-center gap-2">
                 <div className="flex w-[192px] flex-col items-center gap-1 whitespace-nowrap">
                   <p className={`${LABEL} uppercase text-[#a3a3a3]`}>
-                    {tab === "total" ? "Total saved" : "Last 14 days"}
+                    {tab === "total" ? "Total saved" : "Saved last 14 days"}
                   </p>
                   {hidden ? (
                     /* ₹ stays, the digits become dots — the currency still reads
@@ -165,17 +177,22 @@ export default function Dashboard({
                     </p>
                   )}
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <PaceDot pace={health} />
-                  <p className={LABEL} style={{ color: PACE_STYLE[health].text }}>
-                    {PACE_LABEL[health]}
-                  </p>
-                </div>
+                {/* Status line is on the savings tab only — the Progress frame
+                    drops it, the chart is making the same point there. */}
+                {tab === "total" && (
+                  <div className="flex items-center gap-1.5">
+                    <PaceDot pace={health} />
+                    <p className={LABEL} style={{ color: PACE_PILL[health].text }}>
+                      {PACE_LABEL[health]}
+                    </p>
+                  </div>
+                )}
               </div>
 
-              {/* the hero art and the chart share a fixed box, so switching
-                  tabs can't shift everything below it */}
-              <div className="relative h-[184px] w-[173px]">
+              {/* Both tabs' visuals live in one fixed-height box so switching
+                  can't shift the CTAs and goals below. The chart needs the full
+                  column width, the coin is 173px wide and centred. */}
+              <div className="relative h-[192px] w-full">
                 {/* No `mode="wait"` — both branches are absolutely positioned in
                     this box, so they cross-fade in place. Serialising them
                     doubled the switch latency and, if you tapped the segments
@@ -184,47 +201,32 @@ export default function Dashboard({
                   {tab === "total" ? (
                     <motion.div
                       key="coin"
-                      className="absolute inset-0 overflow-hidden"
+                      className="absolute inset-y-0 left-1/2 w-[173px] -translate-x-1/2 overflow-hidden"
                       initial={{ opacity: 0, scale: 0.94 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.94 }}
                       transition={{ duration: 0.24, ease: [0.23, 1, 0.32, 1] }}
                     >
+                      {/* The coin is a screenshot on an opaque white ground, so
+                          on the dot paper it punched out a white rectangle.
+                          Multiply drops the white to nothing and leaves the
+                          coin's own colours alone. */}
                       <img
                         src="/coin.png"
                         alt=""
-                        className="absolute left-[-8.84%] top-[-3.12%] h-[99.05%] w-[113.92%] max-w-none"
+                        className="absolute left-[-8.84%] top-[-3.12%] h-[99.05%] w-[113.92%] max-w-none mix-blend-multiply"
                       />
                     </motion.div>
                   ) : (
                     <motion.div
-                      key="bars"
-                      className="absolute inset-0 flex items-end gap-[3px]"
-                      initial={{ opacity: 0, scale: 0.94 }}
+                      key="chart"
+                      className="absolute inset-0"
+                      initial={{ opacity: 0, scale: 0.98 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.94 }}
+                      exit={{ opacity: 0, scale: 0.98 }}
                       transition={{ duration: 0.24, ease: [0.23, 1, 0.32, 1] }}
                     >
-                      {days.map((amount, i) => {
-                        const max = Math.max(...days, 1);
-                        // above the window's daily average is lit, below is a
-                        // stub — a day you saved nothing still leaves a mark
-                        const lit = amount > dayAvg;
-                        return (
-                          <motion.span
-                            key={i}
-                            className="flex-1 rounded-[1px]"
-                            style={{
-                              background: lit
-                                ? "linear-gradient(to top, #5ee7b7, #00c86a)"
-                                : "#f0f0f0",
-                            }}
-                            initial={{ height: 0 }}
-                            animate={{ height: `${Math.max(3, (amount / max) * 100)}%` }}
-                            transition={{ duration: 0.4, delay: i * 0.03, ease: [0.23, 1, 0.32, 1] }}
-                          />
-                        );
-                      })}
+                      <MonthlyChart buckets={months} hidden={hidden} />
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -259,6 +261,7 @@ export default function Dashboard({
               <GoalCard
                 key={goal.id}
                 goal={goal}
+                hidden={hidden}
                 onOpen={() => onOpenGoal(goal.id)}
                 onNudge={() => onNudge("your squad")}
               />
@@ -318,19 +321,16 @@ function Segment({
   );
 }
 
-/** Blue-dot-in-a-halo from the Figma, recoloured per pace state so the dot and
-    the words can never disagree. */
+/** Dot-in-a-halo from the Financial health component. Dot, halo and label all
+    come off one entry, so the colour and the words can never disagree. */
 function PaceDot({ pace }: { pace: Pace }) {
-  const color = PACE_STYLE[pace].text;
+  const { dot, halo } = PACE_PILL[pace];
   return (
     <span className="grid size-4 place-items-center">
-      <span
-        className="flex rounded-full p-[2px]"
-        style={{ background: `color-mix(in srgb, ${color} 30%, transparent)` }}
-      >
+      <span className="flex rounded-full p-[2px]" style={{ background: halo }}>
         <span
           className="size-2 rounded-full border-[1.289px] border-black"
-          style={{ background: color, boxShadow: "inset 0 2.578px 0 0 rgba(255,255,255,0.35)" }}
+          style={{ background: dot, boxShadow: "inset 0 2.578px 0 0 rgba(255,255,255,0.35)" }}
         />
       </span>
     </span>
@@ -339,10 +339,12 @@ function PaceDot({ pace }: { pace: Pace }) {
 
 function GoalCard({
   goal,
+  hidden,
   onOpen,
   onNudge,
 }: {
   goal: Goal;
+  hidden: boolean;
   onOpen: () => void;
   onNudge: () => void;
 }) {
@@ -374,7 +376,9 @@ function GoalCard({
       <div className="flex w-full flex-col gap-3">
         <div className="flex w-full items-center justify-between whitespace-nowrap">
           <p className="font-serif text-[16px] font-semibold leading-[1.3] tnum">
-            ₹{inrPlain(goal.saved)} / ₹{inrPlain(goal.target)}
+            {hidden
+              ? "₹••••• / ₹•••••"
+              : `₹${inrPlain(goal.saved)} / ₹${inrPlain(goal.target)}`}
           </p>
           <p className={LABEL} style={{ color: style.text }}>
             {pct}%

@@ -139,6 +139,16 @@ input[type="date"]::-webkit-datetime-edit-year-field {
   color: inherit;
 }
 
+/* Overview's paper: a fine dot grid on white, lifted from the design's
+   background. Drawn as a gradient rather than shipped as a PNG so it stays crisp
+   at any pixel density and costs nothing to load — swap in `background-image:
+   url(...)` here if you'd rather use the exported asset. */
+.dot-paper {
+  background-color: #ffffff;
+  background-image: radial-gradient(circle, rgba(0, 0, 0, 0.07) 0.7px, transparent 0.7px);
+  background-size: 11.35px 11.35px;
+}
+
 /* Frosted glass pill used on the green hero (track, CTAs). */
 .glass {
   background: rgba(255, 255, 255, 0.2);

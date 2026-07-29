@@ -66,6 +66,20 @@ function inDays(days: number) {
 const monthYear = (iso: string) =>
   parseLocalDate(iso).toLocaleDateString("en-GB", { month: "short", year: "numeric" });
 
+/**
+ * Days between today and the given day of a month N months back.
+ *
+ * The Progress chart buckets on the real calendar, so history has to be anchored
+ * to months rather than to a fixed `daysAgo`. Hardcoding 45 would drift between
+ * MAY and JUN depending on when you open the app.
+ */
+function daysAgoIn(monthsBack: number, day: number) {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const then = new Date(now.getFullYear(), now.getMonth() - monthsBack, day);
+  return Math.max(0, Math.round((today.getTime() - then.getTime()) / 86_400_000));
+}
+
 const LADAKH_DUE = inDays(9);
 const IPHONE_DUE = inDays(24);
 const GOA_DUE = inDays(139);
@@ -88,6 +102,12 @@ export const GOALS: Goal[] = [
       { id: "l1", categoryId: "cashback", source: "boost", label: "Cashback", amount: 1500, daysAgo: 1 },
       { id: "l2", categoryId: "roundup", source: "roundup", label: "Round-ups", amount: 96, daysAgo: 3 },
       { id: "l3", categoryId: "cooked", source: "skip", label: "Cooked in", amount: 410, daysAgo: 5 },
+      { id: "l4", categoryId: "bonus", source: "boost", label: "Bonus", amount: 4200, daysAgo: daysAgoIn(1, 18) },
+      { id: "l5", categoryId: "cooked", source: "skip", label: "Cooked in", amount: 1840, daysAgo: daysAgoIn(1, 6) },
+      { id: "l6", categoryId: "cab", source: "skip", label: "Skipped cab", amount: 960, daysAgo: daysAgoIn(2, 21) },
+      { id: "l7", categoryId: "roundup", source: "roundup", label: "Round-ups", amount: 640, daysAgo: daysAgoIn(3, 12) },
+      { id: "l8", categoryId: "cashback", source: "boost", label: "Cashback", amount: 2100, daysAgo: daysAgoIn(4, 9) },
+      { id: "l9", categoryId: "cooked", source: "skip", label: "Cooked in", amount: 1250, daysAgo: daysAgoIn(5, 15) },
     ],
   },
   {
@@ -105,6 +125,12 @@ export const GOALS: Goal[] = [
       { id: "i2", categoryId: "roundup", source: "roundup", label: "Round-ups", amount: 232, daysAgo: 2 },
       { id: "i3", categoryId: "cooked", source: "skip", label: "Cooked in", amount: 1180, daysAgo: 3 },
       { id: "i4", categoryId: "cab", source: "skip", label: "Skipped cab", amount: 260, daysAgo: 5 },
+      { id: "i5", categoryId: "cooked", source: "skip", label: "Cooked in", amount: 2600, daysAgo: daysAgoIn(1, 24) },
+      { id: "i6", categoryId: "cashback", source: "boost", label: "Cashback", amount: 3400, daysAgo: daysAgoIn(1, 11) },
+      { id: "i7", categoryId: "roundup", source: "roundup", label: "Round-ups", amount: 720, daysAgo: daysAgoIn(2, 8) },
+      { id: "i8", categoryId: "bonus", source: "boost", label: "Bonus", amount: 5000, daysAgo: daysAgoIn(3, 27) },
+      { id: "i9", categoryId: "cab", source: "skip", label: "Skipped cab", amount: 1180, daysAgo: daysAgoIn(4, 19) },
+      { id: "i10", categoryId: "cooked", source: "skip", label: "Cooked in", amount: 2250, daysAgo: daysAgoIn(5, 4) },
     ],
   },
   {
@@ -123,6 +149,12 @@ export const GOALS: Goal[] = [
       { id: "g3", categoryId: "cab", source: "skip", label: "Skipped cab", amount: 540, daysAgo: 2 },
       { id: "g4", categoryId: "cashback", source: "boost", label: "Cashback", amount: 1000, daysAgo: 4 },
       { id: "g5", categoryId: "bonus", source: "boost", label: "Bonus", amount: 2500, daysAgo: 6 },
+      { id: "g6", categoryId: "cooked", source: "skip", label: "Cooked in", amount: 2900, daysAgo: daysAgoIn(1, 20) },
+      { id: "g7", categoryId: "roundup", source: "roundup", label: "Round-ups", amount: 830, daysAgo: daysAgoIn(2, 14) },
+      { id: "g8", categoryId: "cashback", source: "boost", label: "Cashback", amount: 1600, daysAgo: daysAgoIn(2, 3) },
+      { id: "g9", categoryId: "bonus", source: "boost", label: "Bonus", amount: 3800, daysAgo: daysAgoIn(3, 22) },
+      { id: "g10", categoryId: "cooked", source: "skip", label: "Cooked in", amount: 1450, daysAgo: daysAgoIn(4, 26) },
+      { id: "g11", categoryId: "cab", source: "skip", label: "Skipped cab", amount: 2050, daysAgo: daysAgoIn(5, 10) },
     ],
   },
 ];
