@@ -137,14 +137,14 @@ function SheetShell({
           <div className="h-1 w-9 rounded-sm bg-black/20" />
         </div>
         <motion.div
-          /* gap-6 is a floor, not the spacing: justify-between spreads the
-             question and the CTA apart, and the gap guarantees they still
-             breathe if the panel is squeezed on a short screen. */
+          /* gap-6 is now the spacing rather than a floor: the panel is sized by
+             its content, so justify-between has nothing to distribute. A fixed
+             290 left a dead white band between a single field and the CTA. */
           className="flex min-h-0 flex-col justify-between gap-6 overflow-hidden rounded-t-[4px] border-t border-[#e6e7e7] bg-white py-4"
-          /* real height, so justify-between has room to work — flex-1 here
-             would collapse to content in an auto-height sheet. min-h-0 still
-             lets it shrink when the sheet is capped to a short viewport. */
-          animate={{ height: panelHeight ?? (accessory ? 290 : 350) }}
+          /* Auto, so a step is exactly as tall as it needs — and the quest picker
+             grows on its own when its menu opens instead of needing a hardcoded
+             open height. min-h-0 still lets it shrink on a short viewport. */
+          animate={{ height: panelHeight ?? "auto" }}
           initial={false}
           transition={{ duration: 0.25, ease: EASE_DRAWER }}
         >
@@ -174,7 +174,11 @@ function SheetShell({
             </button>
           </div>
         </motion.div>
-        <div className="shrink-0">{accessory}</div>
+        {/* White behind the accessory: the keyboard deck has 25px rounded top
+            corners, and with nothing behind them those corners showed the scrim
+            as two dark notches. The sheet surface now runs on underneath, so the
+            curve reveals the sheet. */}
+        <div className="shrink-0 bg-white">{accessory}</div>
       </motion.div>
     </motion.div>
   );
@@ -275,7 +279,6 @@ export function NewQuestSheet({
       cta: "Start goal",
       valid: cycle !== "",
       accessory: undefined,
-      panelHeight: 360,
       field: (
         <div className="flex flex-col gap-2">
           {CYCLES.map((c) => {
@@ -381,8 +384,6 @@ export function StashSheet({
       cta: "Continue",
       valid: goalId !== "",
       accessory: undefined,
-      /* the menu needs somewhere to go, so the panel grows while it's open */
-      panelHeight: pickerOpen ? 430 : 300,
       field: (
         <div className="flex flex-col gap-2">
           {/* Reads as a field, behaves as a select: one line showing the current
@@ -502,8 +503,13 @@ export function StashSheet({
           onDone={() => undefined}
         />
       ) : undefined,
+      /* No fixed cap on the field: the panel sizes itself to its content now, so
+         a hard max-height here only clipped the "Name this category" field that
+         appears under Others. The list is a fixed six, so the content is
+         bounded — min-h-0 keeps it able to shrink and scroll on a short
+         viewport. */
       field: (
-        <div className="phone-scroll flex max-h-[184px] flex-col gap-3 overflow-y-auto">
+        <div className="phone-scroll flex min-h-0 flex-col gap-3 overflow-y-auto">
           <div className="grid grid-cols-2 gap-2">
             {CATEGORIES.map((c) => {
               const selected = category === c.id;
@@ -563,7 +569,6 @@ export function StashSheet({
       onCta={advance}
       onClose={onClose}
       accessory={current.accessory}
-      panelHeight={current.panelHeight}
     >
       {current.field}
     </SheetShell>
