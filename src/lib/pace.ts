@@ -275,14 +275,30 @@ export function streakPeriods(goal: Goal, count?: number): StreakPeriod[] {
   return out;
 }
 
-/** Consecutive periods with a contribution, counting back from the most recent. */
+/**
+ * The streak the grid is showing: the run of consecutive periods with a
+ * contribution that ends at the most recent one filled.
+ *
+ * Counted inside the ten visible cells, not over a longer lookback. It used to
+ * search twice the grid's length, so the pill claimed "12 month streak" above a
+ * grid with ten cells in it — a number the user could not check against anything
+ * on screen. Bounding it to the window makes the pill and the grid the same fact
+ * stated two ways, which is also what node 51:45265 shows: seven filled cells,
+ * "7 month streak".
+ *
+ * Ends at the last *filled* period rather than at today, so the current period
+ * being still open doesn't read as a broken streak.
+ */
 export function streakLength(goal: Goal): number {
-  const periods = streakPeriods(goal, CYCLE_GRID[goal.cycle].count * 2);
+  const periods = streakPeriods(goal);
+  let last = -1;
+  periods.forEach((p, i) => {
+    if (p.hit) last = i;
+  });
+  if (last < 0) return 0;
+
   let run = 0;
-  for (let i = periods.length - 1; i >= 0; i--) {
-    if (periods[i].hit) run++;
-    else if (run > 0 || !periods[i].current) break;
-  }
+  for (let i = last; i >= 0 && periods[i].hit; i--) run++;
   return run;
 }
 
