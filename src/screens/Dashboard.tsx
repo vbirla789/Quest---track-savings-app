@@ -13,7 +13,7 @@ import {
   type Pace,
 } from "../lib/pace";
 import { useCountUp } from "../lib/useCountUp";
-import Avatar from "../components/Avatar";
+import AvatarStack from "../components/AvatarStack";
 import MonthlyChart from "../components/MonthlyChart";
 import StatusBar from "../components/StatusBar";
 
@@ -453,11 +453,7 @@ function GoalCard({
           <div className="w-full border-t border-dotted border-[#d8d8d8]" />
           <div className="flex w-full items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="flex items-start">
-                {goal.squad.map((m) => (
-                  <Avatar key={m.name} member={m} size={32} className="-mr-3 last:mr-0" />
-                ))}
-              </div>
+              <AvatarStack squad={goal.squad} />
               <div className="flex flex-col whitespace-nowrap">
                 <p className={LABEL}>
                   {goal.squad.length} {goal.squad.length === 1 ? "friend" : "friends"}
@@ -473,7 +469,7 @@ function GoalCard({
               /* Secondary: nudging is a side errand next to adding money, and a
                  filled button on every shared card competed with the row's real
                  primary. Same treatment as the detail hero's nudge. */
-              className="h-[29px] w-[74px] rounded-[2px] border border-[#c7c8c8] bg-white font-mono text-[12px] font-medium uppercase leading-[1.4] text-black active:scale-95"
+              className="h-[29px] w-[74px] shrink-0 rounded-[2px] border border-[#c7c8c8] bg-white font-mono text-[12px] font-medium uppercase leading-[1.4] text-black active:scale-95"
               style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.08))" }}
             >
               Nudge

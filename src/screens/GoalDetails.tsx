@@ -13,7 +13,7 @@ import {
   streakPeriods,
   targetDateLabel,
 } from "../lib/pace";
-import Avatar from "../components/Avatar";
+import AvatarStack from "../components/AvatarStack";
 import MilestoneBadge from "../components/MilestoneBadge";
 import StatusBar from "../components/StatusBar";
 import SysIcon from "../components/SysIcon";
@@ -284,11 +284,7 @@ export default function GoalDetails({
                   <span className="h-0 w-full border-t border-dotted border-[#d8d8d8]" />
                   <div className="flex w-full items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="flex items-start">
-                        {goal.squad.map((m) => (
-                          <Avatar key={m.name} member={m} size={32} className="-mr-3 last:mr-0" />
-                        ))}
-                      </div>
+                      <AvatarStack squad={goal.squad} />
                       <div className="flex flex-col whitespace-nowrap">
                         <p className={MONO}>
                           {goal.squad.length} {goal.squad.length === 1 ? "friend" : "friends"}
